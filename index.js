@@ -1,38 +1,47 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import fetch from 'node-fetch';
-import bodyParser from 'body-parser';
 
 dotenv.config();
 
-const PORT = process.env.PORT;
 const app = express();
-app.use(bodyParser.json());
+const PORT = 3000;
 
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+// Parse JSON bodies
+app.use(express.json());
 
+// 🔹 Health check (optional but useful)
 app.get('/', (req, res) => {
-  res.send('Chownow webhook server is running!');
+  res.send('Chowbot server is running 🚀');
 });
 
+// 🔹 Webhook verification endpoint (Meta / WhatsApp)
 app.get('/webhook', (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-    console.log('Webhook verified');
-    res.status(200).send(challenge);
-  } else {
-    res.sendStatus(403);
+  console.log('Webhook verification request:', {
+    mode,
+    token,
+    envToken: process.env.VERIFY_TOKEN,
+  });
+
+  if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+    console.log('✅ Webhook verified successfully');
+    return res.status(200).send(challenge);
   }
+
+  console.log('❌ Webhook verification failed');
+  return res.sendStatus(403);
 });
 
+// 🔹 Webhook POST endpoint (messages will come here later)
 app.post('/webhook', (req, res) => {
-  console.log(JSON.stringify(req.body, null, 2));
+  console.log('Incoming webhook event:', JSON.stringify(req.body, null, 2));
   res.sendStatus(200);
 });
 
+// 🔹 Start server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Chowbot server running on port ${PORT}`);
 });
