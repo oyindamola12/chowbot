@@ -5,10 +5,15 @@ import bodyParser from 'body-parser';
 
 dotenv.config();
 
+const PORT = process.env.PORT;
 const app = express();
 app.use(bodyParser.json());
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+
+app.get('/', (req, res) => {
+  res.send('Chownow webhook server is running!');
+});
 
 app.get('/webhook', (req, res) => {
   const mode = req.query['hub.mode'];
@@ -28,7 +33,6 @@ app.post('/webhook', (req, res) => {
   res.sendStatus(200);
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
