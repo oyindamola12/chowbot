@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT =process.env.PORT;
 
 // Parse JSON bodies
 app.use(express.json());
@@ -13,33 +13,35 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.send('Chowbot server is running 🚀');
 });
+let lastWhatsappMessage = null;
 
-// 🔹 Webhook verification endpoint (Meta / WhatsApp)
-app.get('/webhook', (req, res) => {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
 
-  console.log('Webhook verification request:', {
-    mode,
-    token,
-    envToken: process.env.VERIFY_TOKEN,
-  });
-
-  if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
-    console.log('✅ Webhook verified successfully');
-    return res.status(200).send(challenge);
-  }
-
-  console.log('❌ Webhook verification failed');
-  return res.sendStatus(403);
-});
-
-// 🔹 Webhook POST endpoint (messages will come here later)
+// =====================
+// POST – WhatsApp hook
+// =====================
 app.post('/webhook', (req, res) => {
-  console.log('Incoming webhook event:', JSON.stringify(req.body, null, 2));
+  console.log('📩 Incoming WhatsApp message');
+  console.log(JSON.stringify(req.body, null, 2));
+
+  lastWhatsappMessage = req.body;
+
   res.sendStatus(200);
 });
+
+// =====================
+// GET – View last msg
+// =====================
+app.get('/last-message', (req, res) => {
+  if (!lastWhatsappMessage) {
+    return res.send('<h3>No WhatsApp message received yet</h3>');
+  }
+
+  res.send(`
+    <h2>📩 Last WhatsApp Message</h2>
+    <pre>${JSON.stringify(lastWhatsappMessage, null, 2)}</pre>
+  `);
+});
+
 
 // 🔹 Start server
 app.listen(PORT, () => {
