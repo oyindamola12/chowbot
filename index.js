@@ -56,7 +56,7 @@ const app = express();
 app.use(express.json());
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-
+let lastWhatsappMessage = null;
 // ======================
 // ROOT (optional check)
 // ======================
@@ -72,27 +72,48 @@ app.get('/webhook', (req, res) => {
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  console.log('GET /webhook', req.query);
+  console.log('VERIFY DEBUG →', { mode, token, challenge });
 
   if (mode === 'subscribe' && token === VERIFY_TOKEN) {
     return res.status(200).send(challenge);
   }
 
-  return res.sendStatus(403);
+  return res.status(403).send('Forbidden');
 });
 
 // ======================
 // POST – WhatsApp msgs
 // ======================
+let allMessages = [];
+
 app.post('/webhook', (req, res) => {
-  console.log('POST /webhook');
-  console.log(JSON.stringify(req.body, null, 2));
+  const entry = req.body.entry?.[0];
+  const changes = entry?.changes?.[0];
+  const messages = changes?.value?.messages;
+
+  if (messages) {
+    messages.forEach(msg => {
+      allMessages.push({
+        from: msg.from,
+        text: msg.text?.body,
+        timestamp: msg.timestamp
+      });
+    });
+  }
 
   res.sendStatus(200);
 });
 
+app.get('/last-message', (req, res) => {
+  res.send(`
+    <h2>📩 WhatsApp Messages Received</h2>
+    <pre>${JSON.stringify(allMessages, null, 2)}</pre>
+  `);
+});
+
+
 // ======================
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
