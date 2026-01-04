@@ -106,6 +106,7 @@ app.get('/terms', (req, res) => {
 
 //   res.sendStatus(200);
 // });
+
 app.post('/webhook', async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
@@ -242,13 +243,16 @@ app.post('/webhook', async (req, res) => {
   res.status(200).send('Webhook processed')
 })
 // ======================
+
 // View messages
 // ======================
 app.get('/last-message', (req, res) => {
   res.send(`
     <h2>📩 WhatsApp Messages Received</h2>
     <pre>${JSON.stringify(allMessages, null, 2)}</pre>
+
   `);
+  console.log("WhatsApp Messages Received")
 });
 
 
