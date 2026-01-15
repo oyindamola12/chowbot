@@ -49,8 +49,8 @@ async function sendWhatsAppMessage(to, message) {
 
 
 // Example usage
-// sendWhatsAppMessage('+2349078757814', 'Hello from your app!')
-//   .catch(console.error);
+
+ 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
@@ -65,6 +65,7 @@ app.get('/data-deletion', (req, res) => {
 
 // POST endpoint for actual deletion request
 app.post('/data-deletion', (req, res) => {
+  
   const { phoneNumber } = req.body;
 
   if (!phoneNumber) {
@@ -85,27 +86,29 @@ app.get('/terms', (req, res) => {
 // ======================
 // Webhook Verify (GET)
 // ======================
-// app.post('/webhook', (req, res) => {
-//   const entry = req.body.entry?.[0];
-//   const change = entry?.changes?.[0];
-//   const value = change?.value;
-//   const message = value?.messages?.[0];
+app.post('/webhook', (req, res) => {
+  const entry = req.body.entry?.[0];
+  const change = entry?.changes?.[0];
+  const value = change?.value;
+  const message = value?.messages?.[0];
 
-//   // Ignore non-user messages
-//   if (!message || message.type !== 'text') {
-//     return res.sendStatus(200);
-//   }
+  // Ignore non-user messages
+  if (!message || message.type !== 'text') {
+    return res.sendStatus(200);
+  }
 
-//   const from = message.from;
-//   const text = message.text.body;
+  const from = message.from;
+  const text = message.text.body;
 
-//   console.log('📩 USER MESSAGE:', from, text);
+  console.log('📩 USER MESSAGE:', from, text);
 
-//   // respond
-//   sendMessage(from, `You said: ${text}`);
+  // respond
+  sendMessage(from, `You said: ${text}`);
 
-//   res.sendStatus(200);
-// });
+  res.sendStatus(200);
+});
+
+
 
 app.post('/webhook', async (req, res) => {
   try {
@@ -152,109 +155,14 @@ app.post('/webhook', async (req, res) => {
 });
 
 // ======================
-// Webhook Messages (POST)
-// ======================
-// app.post('/webhook', (req, res) => {
-//   const entry = req.body.entry?.[0];
-//   const change = entry?.changes?.[0];
-//   const value = change?.value;
-
-//   // 1️⃣ Incoming user message
-//   const message = value?.messages?.[0];
-
-//   // 2️⃣ Message status update
-//   const status = value?.statuses?.[0];
-
-//   if (message) {
-//     const from = message.from;
-//     const type = message.type;
-
-//     if (type === 'text') {
-//       const text = message.text.body;
-//       console.log('📩 USER MESSAGE:', from, text);
-
-//       // reply
-//       sendMessage(from, `You said: ${text}`);
-//     }
-//   }
-
-//   if (status) {
-//     console.log('ℹ️ MESSAGE STATUS:', status.status);
-//   }
-
-//   res.sendStatus(200);
-// });
-
-
-app.post('/webhook', async (req, res) => {
-  const { entry } = req.body
-
-  if (!entry || entry.length === 0) {
-    return res.status(400).send('Invalid Request')
-  }
-
-  const changes = entry[0].changes
-
-  if (!changes || changes.length === 0) {
-    return res.status(400).send('Invalid Request')
-  }
-
-  const statuses = changes[0].value.statuses ? changes[0].value.statuses[0] : null
-  const messages = changes[0].value.messages ? changes[0].value.messages[0] : null
-
-  if (statuses) {
-    // Handle message status
-    console.log(`
-      MESSAGE STATUS UPDATE:
-      ID: ${statuses.id},
-      STATUS: ${statuses.status}
-    `)
-  }
-
-  if (messages) {
-    // Handle received messages
-    if (messages.type === 'text') {
-      if (messages.text.body.toLowerCase() === 'hello') {
-        replyMessage(messages.from, 'Hello. How are you?', messages.id)
-      }
-
-      if (messages.text.body.toLowerCase() === 'list') {
-        sendList(messages.from)
-      }
-
-      if (messages.text.body.toLowerCase() === 'buttons') {
-        sendReplyButtons(messages.from)
-      }
-    }
-
-    if (messages.type === 'interactive') {
-      if (messages.interactive.type === 'list_reply') {
-        sendMessage(messages.from, `You selected the option with ID ${messages.interactive.list_reply.id} - Title ${messages.interactive.list_reply.title}`)
-      }
-
-      if (messages.interactive.type === 'button_reply') {
-        sendMessage(messages.from, `You selected the button with ID ${messages.interactive.button_reply.id} - Title ${messages.interactive.button_reply.title}`)
-      }
-    }
-    
-    console.log(JSON.stringify(messages, null, 2))
-  }
-  
-  res.status(200).send('Webhook processed')
-})
-// ======================
-
 // View messages
 // ======================
 app.get('/last-message', (req, res) => {
   res.send(`
     <h2>📩 WhatsApp Messages Received</h2>
     <pre>${JSON.stringify(allMessages, null, 2)}</pre>
-
   `);
-  console.log("WhatsApp Messages Received")
 });
-
 
 // ======================
 const PORT = process.env.PORT || 8080;

@@ -1,0 +1,68 @@
+[debug] [2026-01-06T23:57:46.462Z] ----------------------------------------------------------------------
+[debug] [2026-01-06T23:57:46.464Z] Command:       /opt/homebrew/Cellar/node/24.5.0/bin/node /opt/homebrew/bin/firebase functions:secrets:set WHATSAPP_TOKEN=EAFsDj3m2GcMBQWx0cdCVzwWgrnut6ZA2FhUtpr04c3kvv4ZCxS9au4m6OcUi0DCVhbeyBEZCJuVhkxcW5LBZC0Md8vOgROb010IOWDnpFfMY3rjzimRvquP31614M18PKa7dFN5j43FkzRpeHHhTnvsgbnnAZCfz4pwFIlB3qoQPVZBE91ZA8ZBMVVLAMFWwVD83ajC0UY7cVNdhsMLUcqGUSMuZCUKLKqXY7tTI85t1iHZB4q7GVTLCweh6ZAka194IQfaqh4L2d0ilOOZAZBSncHhSZALXhktGUZD
+
+[debug] [2026-01-06T23:57:46.464Z] CLI Version:   15.1.0
+[debug] [2026-01-06T23:57:46.464Z] Platform:      darwin
+[debug] [2026-01-06T23:57:46.464Z] Node Version:  v24.5.0
+[debug] [2026-01-06T23:57:46.464Z] Time:          Wed Jan 07 2026 00:57:46 GMT+0100 (West Africa Standard Time)
+[debug] [2026-01-06T23:57:46.464Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-01-06T23:57:46.545Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-06T23:57:46.545Z] > authorizing via signed-in user (shittuarinola92@gmail.com)
+[debug] [2026-01-06T23:57:46.545Z] Checked if tokens are valid: true, expires at: 1767746491791
+[debug] [2026-01-06T23:57:46.545Z] Checked if tokens are valid: true, expires at: 1767746491791
+[debug] [2026-01-06T23:57:46.546Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/chowbot-ad65d/services/secretmanager.googleapis.com [none]
+[debug] [2026-01-06T23:57:46.546Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/chowbot-ad65d/services/secretmanager.googleapis.com x-goog-quota-user=projects/chowbot-ad65d
+[debug] [2026-01-06T23:57:48.349Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/chowbot-ad65d/services/secretmanager.googleapis.com 200
+[debug] [2026-01-06T23:57:48.350Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/chowbot-ad65d/services/secretmanager.googleapis.com [omitted]
+[debug] [2026-01-06T23:57:48.350Z] Checked if tokens are valid: true, expires at: 1767746491791
+[debug] [2026-01-06T23:57:48.350Z] Checked if tokens are valid: true, expires at: 1767746491791
+[debug] [2026-01-06T23:57:48.350Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/chowbot-ad65d/services/secretmanager.googleapis.com:enable [none]
+[debug] [2026-01-06T23:57:48.350Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/chowbot-ad65d/services/secretmanager.googleapis.com:enable x-goog-quota-user=projects/chowbot-ad65d
+[debug] [2026-01-06T23:57:49.457Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/chowbot-ad65d/services/secretmanager.googleapis.com:enable 200
+[debug] [2026-01-06T23:57:49.457Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/chowbot-ad65d/services/secretmanager.googleapis.com:enable [omitted]
+[debug] [2026-01-06T23:57:59.470Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-06T23:57:59.470Z] > authorizing via signed-in user (shittuarinola92@gmail.com)
+[debug] [2026-01-06T23:57:59.470Z] [iam] checking project chowbot-ad65d for permissions ["firebase.projects.get","secretmanager.secrets.create","secretmanager.secrets.get","secretmanager.secrets.update","secretmanager.versions.add"]
+[debug] [2026-01-06T23:57:59.470Z] Checked if tokens are valid: true, expires at: 1767746491791
+[debug] [2026-01-06T23:57:59.471Z] Checked if tokens are valid: true, expires at: 1767746491791
+[debug] [2026-01-06T23:57:59.471Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions [none]
+[debug] [2026-01-06T23:57:59.471Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions x-goog-quota-user=projects/chowbot-ad65d
+[debug] [2026-01-06T23:57:59.471Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions {"permissions":["firebase.projects.get","secretmanager.secrets.create","secretmanager.secrets.get","secretmanager.secrets.update","secretmanager.versions.add"]}
+[debug] [2026-01-06T23:58:01.027Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions 200
+[debug] [2026-01-06T23:58:01.027Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions {"permissions":["firebase.projects.get","secretmanager.secrets.create","secretmanager.secrets.get","secretmanager.secrets.update","secretmanager.versions.add"]}
+[debug] [2026-01-06T23:58:01.028Z] Checked if tokens are valid: true, expires at: 1767746491791
+[debug] [2026-01-06T23:58:01.028Z] Checked if tokens are valid: true, expires at: 1767746491791
+[debug] [2026-01-06T23:58:01.028Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d [none]
+[debug] [2026-01-06T23:58:01.495Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d 200
+[debug] [2026-01-06T23:58:01.495Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d {"projectNumber":"315088195070","projectId":"chowbot-ad65d","lifecycleState":"ACTIVE","name":"Chowbot","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-12-19T07:35:29.149620Z"}
+[warn] ⚠  By convention, secret key must be in UPPER_SNAKE_CASE. 
+[debug] [2026-01-06T23:58:23.493Z] Error: Timed out.
+    at Timeout._onTimeout (/opt/homebrew/lib/node_modules/firebase-tools/lib/utils.js:275:49)
+    at listOnTimeout (node:internal/timers:608:17)
+    at process.processTimers (node:internal/timers:543:7)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-01-06T23:58:24.099Z] ----------------------------------------------------------------------
+[debug] [2026-01-06T23:58:24.100Z] Command:       /opt/homebrew/Cellar/node/24.5.0/bin/node /opt/homebrew/bin/firebase functions:secrets:set PHONE_NUMBER_ID=966224853232985
+[debug] [2026-01-06T23:58:24.100Z] CLI Version:   15.1.0
+[debug] [2026-01-06T23:58:24.100Z] Platform:      darwin
+[debug] [2026-01-06T23:58:24.100Z] Node Version:  v24.5.0
+[debug] [2026-01-06T23:58:24.101Z] Time:          Wed Jan 07 2026 00:58:24 GMT+0100 (West Africa Standard Time)
+[debug] [2026-01-06T23:58:24.101Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-01-06T23:58:24.171Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-06T23:58:24.171Z] > authorizing via signed-in user (shittuarinola92@gmail.com)
+[debug] [2026-01-06T23:58:24.171Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-06T23:58:24.171Z] > authorizing via signed-in user (shittuarinola92@gmail.com)
+[debug] [2026-01-06T23:58:24.171Z] [iam] checking project chowbot-ad65d for permissions ["firebase.projects.get","secretmanager.secrets.create","secretmanager.secrets.get","secretmanager.secrets.update","secretmanager.versions.add"]
+[debug] [2026-01-06T23:58:24.171Z] Checked if tokens are valid: true, expires at: 1767746491791
+[debug] [2026-01-06T23:58:24.171Z] Checked if tokens are valid: true, expires at: 1767746491791
+[debug] [2026-01-06T23:58:24.172Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions [none]
+[debug] [2026-01-06T23:58:24.172Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions x-goog-quota-user=projects/chowbot-ad65d
+[debug] [2026-01-06T23:58:24.172Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions {"permissions":["firebase.projects.get","secretmanager.secrets.create","secretmanager.secrets.get","secretmanager.secrets.update","secretmanager.versions.add"]}
+[debug] [2026-01-06T23:58:34.434Z] *** [apiv2] error from fetch(https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions, {"headers":{},"method":"POST","body":"{\"permissions\":[\"firebase.projects.get\",\"secretmanager.secrets.create\",\"secretmanager.secrets.get\",\"secretmanager.secrets.update\",\"secretmanager.versions.add\"]}"}): FetchError: request to https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions failed, reason: socket hang up
+[debug] [2026-01-06T23:58:34.434Z] [iam] error while checking permissions, command may fail: Failed to make request to https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions
+[debug] [2026-01-06T23:58:34.436Z] Checked if tokens are valid: true, expires at: 1767746491791
+[debug] [2026-01-06T23:58:34.436Z] Checked if tokens are valid: true, expires at: 1767746491791
+[debug] [2026-01-06T23:58:34.436Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d [none]
