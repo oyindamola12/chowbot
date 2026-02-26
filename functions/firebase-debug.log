@@ -1,0 +1,330 @@
+[debug] [2026-02-11T23:33:24.367Z] ----------------------------------------------------------------------
+[debug] [2026-02-11T23:33:24.368Z] Command:       /opt/homebrew/Cellar/node/24.5.0/bin/node /opt/homebrew/bin/firebase functions:shell
+[debug] [2026-02-11T23:33:24.368Z] CLI Version:   15.1.0
+[debug] [2026-02-11T23:33:24.368Z] Platform:      darwin
+[debug] [2026-02-11T23:33:24.368Z] Node Version:  v24.5.0
+[debug] [2026-02-11T23:33:24.368Z] Time:          Thu Feb 12 2026 00:33:24 GMT+0100 (West Africa Standard Time)
+[debug] [2026-02-11T23:33:24.368Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-02-11T23:33:24.896Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-02-11T23:33:24.896Z] > authorizing via signed-in user (shittuarinola92@gmail.com)
+[debug] [2026-02-11T23:33:24.896Z] [iam] checking project chowbot-ad65d for permissions ["firebase.projects.get"]
+[debug] [2026-02-11T23:33:24.897Z] Checked if tokens are valid: false, expires at: 1770823906295
+[debug] [2026-02-11T23:33:24.897Z] Checked if tokens are valid: false, expires at: 1770823906295
+[debug] [2026-02-11T23:33:24.897Z] > refreshing access token with scopes: []
+[debug] [2026-02-11T23:33:24.898Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-02-11T23:33:24.898Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-02-11T23:33:25.373Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-02-11T23:33:25.374Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-02-11T23:33:25.392Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions [none]
+[debug] [2026-02-11T23:33:25.392Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions x-goog-quota-user=projects/chowbot-ad65d
+[debug] [2026-02-11T23:33:25.392Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2026-02-11T23:33:27.036Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions 200
+[debug] [2026-02-11T23:33:27.037Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/chowbot-ad65d:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2026-02-11T23:33:27.037Z] Emulator locator file path: /var/folders/r0/9zddv5d9111dg92rz9pz_x880000gn/T/hub-chowbot-ad65d.json
+[warn] ⚠  functions: Functions Emulator unable to start on port 5000, starting on 5001 instead. {"metadata":{"emulator":{"name":"functions"},"message":"Functions Emulator unable to start on port 5000, starting on 5001 instead."}}
+[debug] [2026-02-11T23:33:27.202Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-02-11T23:33:27.234Z] defaultcredentials: writing to file /Users/mariamsheeth/.config/firebase/shittuarinola92_gmail_com_application_default_credentials.json
+[debug] [2026-02-11T23:33:27.234Z] DEBUG: Setting GAC to /Users/mariamsheeth/.config/firebase/shittuarinola92_gmail_com_application_default_credentials.json
+[debug] [2026-02-11T23:33:27.235Z] Checked if tokens are valid: true, expires at: 1770856404374
+[debug] [2026-02-11T23:33:27.235Z] Checked if tokens are valid: true, expires at: 1770856404374
+[debug] [2026-02-11T23:33:27.235Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/chowbot-ad65d/adminSdkConfig [none]
+[debug] [2026-02-11T23:33:27.982Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/chowbot-ad65d/adminSdkConfig 200
+[debug] [2026-02-11T23:33:27.982Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/chowbot-ad65d/adminSdkConfig {"projectId":"chowbot-ad65d","storageBucket":"chowbot-ad65d.firebasestorage.app"}
+[debug] [2026-02-11T23:33:27.995Z] [functions] Watching "/Users/mariamsheeth/Documents/Chownow/functions" for Cloud Functions...
+[debug] [2026-02-11T23:33:28.000Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2026-02-11T23:33:28.890Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "type": "module",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "24"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^7.0.0"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.4.1"
+  },
+  "private": true
+}
+[debug] [2026-02-11T23:33:28.890Z] Building nodejs source
+[debug] [2026-02-11T23:33:28.890Z] Failed to find version of module node: reached end of search path /Users/mariamsheeth/Documents/Chownow/functions/node_modules
+[info] ✔  functions: Using node@24 from host. 
+[info] i  functions: Loaded environment variables from .env.chowbot-ad65d. 
+[debug] [2026-02-11T23:33:28.891Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-02-11T23:33:28.893Z] Found firebase-functions binary at '/Users/mariamsheeth/Documents/Chownow/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8013
+
+[debug] [2026-02-11T23:33:29.159Z] Got response from /__/functions.yaml {"endpoints":{"webhook":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"httpsTrigger":{},"entryPoint":"webhook"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[debug] [2026-02-11T23:33:33.180Z] [functions] Loaded functions definitions from source: webhook.
+[debug] [2026-02-11T23:33:33.181Z] [functions[us-central1-webhook]] http function initialized (http://127.0.0.1:5001/chowbot-ad65d/us-central1/webhook).
+[info] i  functions: Loaded functions: webhook 
+[warn] ⚠  functions: The following emulators are not running, calls to these services will affect production: firestore, database, pubsub, storage, eventarc, tasks 
+[debug] [2026-02-11T23:52:45.530Z] DEBUG: File /Users/mariamsheeth/Documents/Chownow/functions/index.js changed, reloading triggers
+[debug] [2026-02-11T23:52:46.537Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2026-02-11T23:52:47.564Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "type": "module",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "24"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^7.0.0"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.4.1"
+  },
+  "private": true
+}
+[debug] [2026-02-11T23:52:47.564Z] Building nodejs source
+[debug] [2026-02-11T23:52:47.565Z] Failed to find version of module node: reached end of search path /Users/mariamsheeth/Documents/Chownow/functions/node_modules
+[info] ✔  functions: Using node@24 from host. 
+[info] i  functions: Loaded environment variables from .env.chowbot-ad65d. 
+[debug] [2026-02-11T23:52:47.565Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-02-11T23:52:47.566Z] Found firebase-functions binary at '/Users/mariamsheeth/Documents/Chownow/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8445
+
+[debug] [2026-02-11T23:52:47.660Z] Got response from /__/functions.yaml {"endpoints":{},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[debug] [2026-02-11T23:52:49.282Z] DEBUG: File /Users/mariamsheeth/Documents/Chownow/functions/index.js changed, reloading triggers
+[debug] [2026-02-11T23:52:50.285Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2026-02-11T23:52:51.211Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "type": "module",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "24"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^7.0.0"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.4.1"
+  },
+  "private": true
+}
+[debug] [2026-02-11T23:52:51.211Z] Building nodejs source
+[debug] [2026-02-11T23:52:51.211Z] Failed to find version of module node: reached end of search path /Users/mariamsheeth/Documents/Chownow/functions/node_modules
+[info] ✔  functions: Using node@24 from host. 
+[info] i  functions: Loaded environment variables from .env.chowbot-ad65d. 
+[debug] [2026-02-11T23:52:51.211Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-02-11T23:52:51.212Z] Found firebase-functions binary at '/Users/mariamsheeth/Documents/Chownow/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8556
+
+[error] ReferenceError: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and '/Users/mariamsheeth/Documents/Chownow/functions/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///Users/mariamsheeth/Documents/Chownow/functions/index.js:30:16
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:507:37)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:441:47)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1567:24)
+    at Module._compile (node:internal/modules/cjs/loader:1720:5)
+    at Object..js (node:internal/modules/cjs/loader:1871:10)
+    at Module.load (node:internal/modules/cjs/loader:1470:32)
+    at Module._load (node:internal/modules/cjs/loader:1290:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:238:24)
+
+[debug] [2026-02-11T23:52:51.276Z] Got response code 400; body Failed to generate manifest from function source: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and '/Users/mariamsheeth/Documents/Chownow/functions/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+[debug] [2026-02-11T23:52:51.666Z] [functions] Loaded functions definitions from source: .
+[error] ⬢  functions: Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error {"metadata":{"emulator":{"name":"functions"},"message":"Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error"}}
+[debug] [2026-02-11T23:54:35.887Z] DEBUG: File /Users/mariamsheeth/Documents/Chownow/functions/index.js changed, reloading triggers
+[debug] [2026-02-11T23:54:36.889Z] Validating nodejs source
+[debug] [2026-02-11T23:54:46.910Z] checkFunctionsSDKVersion was unable to fetch information from NPM Error: spawnSync npm ETIMEDOUT
+    at Object.spawnSync (node:internal/child_process:1120:20)
+    at Object.spawnSync (node:child_process:910:24)
+    at spawn.spawnSync [as sync] (/opt/homebrew/lib/node_modules/firebase-tools/node_modules/cross-spawn/index.js:26:23)
+    at Object.getLatestSDKVersion (/opt/homebrew/lib/node_modules/firebase-tools/lib/deploy/functions/runtimes/node/versioning.js:54:25)
+    at Object.checkFunctionsSDKVersion (/opt/homebrew/lib/node_modules/firebase-tools/lib/deploy/functions/runtimes/node/versioning.js:74:32)
+    at Delegate.validate (/opt/homebrew/lib/node_modules/firebase-tools/lib/deploy/functions/runtimes/node/index.js:88:20)
+    at FunctionsEmulator.discoverTriggers (/opt/homebrew/lib/node_modules/firebase-tools/lib/emulator/functionsEmulator.js:319:35)
+    at async FunctionsEmulator.loadTriggers (/opt/homebrew/lib/node_modules/firebase-tools/lib/emulator/functionsEmulator.js:361:34)
+[debug] [2026-02-11T23:54:46.910Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "type": "module",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "24"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^7.0.0"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.4.1"
+  },
+  "private": true
+}
+[debug] [2026-02-11T23:54:46.910Z] Building nodejs source
+[debug] [2026-02-11T23:54:46.910Z] Failed to find version of module node: reached end of search path /Users/mariamsheeth/Documents/Chownow/functions/node_modules
+[info] ✔  functions: Using node@24 from host. 
+[info] i  functions: Loaded environment variables from .env.chowbot-ad65d. 
+[debug] [2026-02-11T23:54:46.911Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-02-11T23:54:46.912Z] Found firebase-functions binary at '/Users/mariamsheeth/Documents/Chownow/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8167
+
+[error] ReferenceError: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and '/Users/mariamsheeth/Documents/Chownow/functions/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///Users/mariamsheeth/Documents/Chownow/functions/index.js:30:16
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:507:37)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:441:47)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1567:24)
+    at Module._compile (node:internal/modules/cjs/loader:1720:5)
+    at Object..js (node:internal/modules/cjs/loader:1871:10)
+    at Module.load (node:internal/modules/cjs/loader:1470:32)
+    at Module._load (node:internal/modules/cjs/loader:1290:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:238:24)
+
+[debug] [2026-02-11T23:54:47.010Z] Got response code 400; body Failed to generate manifest from function source: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and '/Users/mariamsheeth/Documents/Chownow/functions/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+[error] ⬢  functions: Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error {"metadata":{"emulator":{"name":"functions"},"message":"Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error"}}
+[debug] [2026-02-11T23:55:25.679Z] DEBUG: File /Users/mariamsheeth/Documents/Chownow/functions/index.js changed, reloading triggers
+[debug] [2026-02-11T23:55:26.681Z] Validating nodejs source
+[debug] [2026-02-11T23:55:36.696Z] checkFunctionsSDKVersion was unable to fetch information from NPM Error: spawnSync npm ETIMEDOUT
+    at Object.spawnSync (node:internal/child_process:1120:20)
+    at Object.spawnSync (node:child_process:910:24)
+    at spawn.spawnSync [as sync] (/opt/homebrew/lib/node_modules/firebase-tools/node_modules/cross-spawn/index.js:26:23)
+    at Object.getLatestSDKVersion (/opt/homebrew/lib/node_modules/firebase-tools/lib/deploy/functions/runtimes/node/versioning.js:54:25)
+    at Object.checkFunctionsSDKVersion (/opt/homebrew/lib/node_modules/firebase-tools/lib/deploy/functions/runtimes/node/versioning.js:74:32)
+    at Delegate.validate (/opt/homebrew/lib/node_modules/firebase-tools/lib/deploy/functions/runtimes/node/index.js:88:20)
+    at FunctionsEmulator.discoverTriggers (/opt/homebrew/lib/node_modules/firebase-tools/lib/emulator/functionsEmulator.js:319:35)
+    at async FunctionsEmulator.loadTriggers (/opt/homebrew/lib/node_modules/firebase-tools/lib/emulator/functionsEmulator.js:361:34)
+[debug] [2026-02-11T23:55:36.696Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "type": "module",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "24"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^7.0.0"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.4.1"
+  },
+  "private": true
+}
+[debug] [2026-02-11T23:55:36.696Z] Building nodejs source
+[debug] [2026-02-11T23:55:36.697Z] Failed to find version of module node: reached end of search path /Users/mariamsheeth/Documents/Chownow/functions/node_modules
+[info] ✔  functions: Using node@24 from host. 
+[info] i  functions: Loaded environment variables from .env.chowbot-ad65d. 
+[debug] [2026-02-11T23:55:36.698Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-02-11T23:55:36.699Z] Found firebase-functions binary at '/Users/mariamsheeth/Documents/Chownow/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8561
+
+[error] ReferenceError: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and '/Users/mariamsheeth/Documents/Chownow/functions/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///Users/mariamsheeth/Documents/Chownow/functions/index.js:30:16
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:507:37)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:441:47)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1567:24)
+    at Module._compile (node:internal/modules/cjs/loader:1720:5)
+    at Object..js (node:internal/modules/cjs/loader:1871:10)
+    at Module.load (node:internal/modules/cjs/loader:1470:32)
+    at Module._load (node:internal/modules/cjs/loader:1290:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:238:24)
+
+[debug] [2026-02-11T23:55:36.904Z] Got response code 400; body Failed to generate manifest from function source: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and '/Users/mariamsheeth/Documents/Chownow/functions/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+[error] ⬢  functions: Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error {"metadata":{"emulator":{"name":"functions"},"message":"Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error"}}
+[debug] [2026-02-11T23:56:38.075Z] DEBUG: File /Users/mariamsheeth/Documents/Chownow/functions/index.js changed, reloading triggers
+[debug] [2026-02-11T23:56:39.077Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2026-02-11T23:56:39.991Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "type": "module",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "24"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^7.0.0"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.4.1"
+  },
+  "private": true
+}
+[debug] [2026-02-11T23:56:39.992Z] Building nodejs source
+[debug] [2026-02-11T23:56:39.992Z] Failed to find version of module node: reached end of search path /Users/mariamsheeth/Documents/Chownow/functions/node_modules
+[info] ✔  functions: Using node@24 from host. 
+[info] i  functions: Loaded environment variables from .env.chowbot-ad65d. 
+[debug] [2026-02-11T23:56:39.992Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-02-11T23:56:39.993Z] Found firebase-functions binary at '/Users/mariamsheeth/Documents/Chownow/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8560
+
+[error] ReferenceError: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and '/Users/mariamsheeth/Documents/Chownow/functions/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///Users/mariamsheeth/Documents/Chownow/functions/index.js:30:16
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:507:37)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:441:47)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1567:24)
+    at Module._compile (node:internal/modules/cjs/loader:1720:5)
+    at Object..js (node:internal/modules/cjs/loader:1871:10)
+    at Module.load (node:internal/modules/cjs/loader:1470:32)
+    at Module._load (node:internal/modules/cjs/loader:1290:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:238:24)
+
+[debug] [2026-02-11T23:56:40.171Z] Got response code 400; body Failed to generate manifest from function source: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and '/Users/mariamsheeth/Documents/Chownow/functions/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+[error] ⬢  functions: Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error {"metadata":{"emulator":{"name":"functions"},"message":"Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error"}}
