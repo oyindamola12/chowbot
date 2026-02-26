@@ -1,44 +1,32 @@
-
+require("dotenv").config();
 const express = require("express");
 const twilio = require("twilio");
 
-// Twilio credentials (store in Firebase environment variables)
-
-
-const client = twilio(process.env.sid, process.env.token);
-
-
 const app = express();
-app.use(express.json()); // parse JSON body
+app.use(express.json());
 
-// POST route to send WhatsApp message
-app.post("/send-whatsapp", async (req, res) => {
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+
+app.post("/send", async (req, res) => {
   try {
-    const { to, contentVariables } = req.body;
+    const { to, message } = req.body;
 
-    if (!to || !contentVariables) {
-      return res.status(400).send({ error: "Missing 'to' or 'contentVariables'" });
-    }
-
-    const message = await client.messages.create({
-      from: "whatsapp:+14155238886", // Twilio sandbox number
-      contentSid: "HXb5b62575e6e4ff6129ad7c8efe1f983e",
-      contentVariables: JSON.stringify(contentVariables),
-      to: `whatsapp:${to}`
+    const response = await client.messages.create({
+      from: "whatsapp:+14155238886", // Twilio Sandbox number
+      to: `whatsapp:${to}`,
+      body: message
     });
 
-    return res.status(200).send({ success: true, sid: message.sid });
-  } catch (error) {
-    console.error("Error sending WhatsApp message:", error);
-    return res.status(500).send({ success: false, error: error.message });
+    res.json({ success: true, sid: response.sid });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-app.post("/inbound-whatsapp", (req, res) => {
-  const incomingMsg = req.body.Body; // the text the user sent
-  const from = req.body.From;
-
-  console.log(`Message from ${from}: ${incomingMsg}`);
-
-  res.send("<Response><Message>Thanks! We got your message.</Message></Response>");
+app.get("/", (req, res) => {
+  res.send("Twilio server running 🚀");
 });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));
