@@ -75,39 +75,16 @@ app.post("/webhook", (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
 
   const from = req.body.From;
-  const message = req.body.Body.trim().toLowerCase();
+  const message = req.body.Body?.trim().toLowerCase() || "";
 
-  if (!sessions[from]) {
-    sessions[from] = { step: "start", cart: [] };
-  }
+  console.log("Incoming:", message);
 
-  const user = sessions[from];
-
-  // 🔥 QR Entry Logic
-  if (message.startsWith("rest_")) {
-    const restaurantCode = message.replace("rest_", "");
-    user.restaurant = restaurantCode;
-    user.step = "menu";
-
-    return sendMenu(restaurantCode, twiml, res);
-  }
-
-  // 🔥 Normal Start
-  if (user.step === "start") {
-    twiml.message(
-      "Welcome 👋\nChoose your area:\n1️⃣ Lekki\n2️⃣ Yaba"
-    );
-    user.step = "choose_area";
-  }
-
-  else if (user.step === "choose_area") {
-    if (message === "1") {
-      user.area = "Lekki";
-      twiml.message(
-        "Restaurants in Lekki:\n1️⃣ Mama Put\n2️⃣ Pizza Hub"
-      );
-      user.step = "choose_restaurant";
-    }
+  // 🔥 Simple test response
+  if (message === "hi") {
+    twiml.message("Welcome 👋 Send 1 for Lekki, 2 for Yaba.");
+  } 
+  else {
+    twiml.message("Send 'hi' to start 🍽");
   }
 
   res.type("text/xml");
