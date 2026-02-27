@@ -74,21 +74,76 @@ app.get("/", (req, res) => {
 app.post("/webhook", (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
 
-  const incomingMsg = req.body.Body;
   const from = req.body.From;
+  const message = req.body.Body.trim().toLowerCase();
 
-  console.log("Incoming message:", incomingMsg);
-  console.log("From:", from);
+  if (!sessions[from]) {
+    sessions[from] = { step: "start", cart: [] };
+  }
 
-  if (incomingMsg.toLowerCase() === "hi") {
-    twiml.message("Welcome 👋 to our food ordering bot!");
-  } else {
-    twiml.message("Send 'hi' to start ordering 🍽");
+  const user = sessions[from];
+
+  // 🔥 QR Entry Logic
+  if (message.startsWith("rest_")) {
+    const restaurantCode = message.replace("rest_", "");
+    user.restaurant = restaurantCode;
+    user.step = "menu";
+
+    return sendMenu(restaurantCode, twiml, res);
+  }
+
+  // 🔥 Normal Start
+  if (user.step === "start") {
+    twiml.message(
+      "Welcome 👋\nChoose your area:\n1️⃣ Lekki\n2️⃣ Yaba"
+    );
+    user.step = "choose_area";
+  }
+
+  else if (user.step === "choose_area") {
+    if (message === "1") {
+      user.area = "Lekki";
+      twiml.message(
+        "Restaurants in Lekki:\n1️⃣ Mama Put\n2️⃣ Pizza Hub"
+      );
+      user.step = "choose_restaurant";
+    }
   }
 
   res.type("text/xml");
   res.send(twiml.toString());
 });
+
+
+function sendMenu(code, twiml, res) {
+  const menus = {
+    mamaput: [
+      { name: "Jollof Rice", price: 2000 },
+      { name: "Fried Rice", price: 2500 }
+    ],
+    pizzahub: [
+      { name: "Pepperoni Pizza", price: 5000 },
+      { name: "BBQ Pizza", price: 5500 }
+    ]
+  };
+
+  const menu = menus[code];
+
+  if (!menu) {
+    twiml.message("Restaurant not found.");
+  } else {
+    let text = "🍽 Menu:\n\n";
+    menu.forEach((item, i) => {
+      text += `${i + 1}️⃣ ${item.name} – ₦${item.price}\n`;
+    });
+    text += "\nReply with item number.";
+
+    twiml.message(text);
+  }
+
+  res.type("text/xml");
+  res.send(twiml.toString());
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
