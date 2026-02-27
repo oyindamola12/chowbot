@@ -28,5 +28,24 @@ app.get("/", (req, res) => {
   res.send("Twilio server running 🚀");
 });
 
+
+app.post("/webhook", (req, res) => {
+  // const twilio = require("twilio");
+  const twiml = new twilio.twiml.MessagingResponse();
+
+  const message = req.body.Body?.toLowerCase();
+
+  if (message === "hi") {
+    twiml.message("Hello 👋 Welcome!");
+  } else if (message === "menu") {
+    twiml.message("1️⃣ Rice\n2️⃣ Pizza\n3️⃣ Burger");
+  } else {
+    twiml.message("Send 'menu' to see options.");
+  }
+
+  res.type("text/xml");
+  res.send(twiml.toString());
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
