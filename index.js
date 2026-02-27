@@ -28,24 +28,45 @@ app.get("/", (req, res) => {
   res.send("Twilio server running 🚀");
 });
 
-
 app.post("/webhook", (req, res) => {
   // const twilio = require("twilio");
   const twiml = new twilio.twiml.MessagingResponse();
 
-  const message = req.body.Body?.toLowerCase();
+  const from = req.body.From;
+  const message = req.body.Body.trim();
 
-  if (message === "hi") {
-    twiml.message("Hello 👋 Welcome!");
-  } else if (message === "menu") {
-    twiml.message("1️⃣ Rice\n2️⃣ Pizza\n3️⃣ Burger");
-  } else {
-    twiml.message("Send 'menu' to see options.");
+  if (!sessions[from]) {
+    sessions[from] = { step: "start", cart: [] };
+  }
+
+  const user = sessions[from];
+
+  if (user.step === "start") {
+    twiml.message(
+      "Welcome 👋 Choose restaurant:\n1️⃣ Mama Put\n2️⃣ Pizza Hub"
+    );
+    user.step = "choose_restaurant";
+  }
+
+  else if (user.step === "choose_restaurant") {
+    if (message === "1") {
+      user.restaurant = "Mama Put";
+      user.step = "menu";
+      twiml.message(
+        "Menu:\n1️⃣ Jollof Rice – ₦2000\n2️⃣ Fried Rice – ₦2500"
+      );
+    }
+  }
+
+  else if (user.step === "menu") {
+    if (message === "1") {
+      user.cart.push("Jollof Rice");
+      twiml.message("Added to cart ✅\nType checkout to pay.");
+    }
   }
 
   res.type("text/xml");
   res.send(twiml.toString());
 });
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
