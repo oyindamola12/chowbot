@@ -71,19 +71,24 @@ app.get("/", (req, res) => {
 //   res.send(twiml.toString());
 // });
 
-app.post("/webhook", (req, res) => {
+app.post("/webhook", async (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
 
-  const from = req.body.From;
   const message = req.body.Body?.trim().toLowerCase() || "";
 
   console.log("Incoming:", message);
 
-  // 🔥 Simple test response
+  if (message.startsWith("menu_")) {
+
+    const slug = message.replace("menu_", "");
+
+    await sendMenu(slug, twiml, res);
+    return;
+  }
+
   if (message === "hi") {
     twiml.message("Welcome 👋 Send 1 for Lekki, 2 for Yaba.");
-  } 
-  else {
+  } else {
     twiml.message("Send 'hi' to start 🍽");
   }
 
@@ -92,27 +97,27 @@ app.post("/webhook", (req, res) => {
 });
 
 
-function sendMenu(code, twiml, res) {
-  const menus = {
-    mamaput: [
-      { name: "Jollof Rice", price: 2000 },
-      { name: "Fried Rice", price: 2500 }
-    ],
-    pizzahub: [
-      { name: "Pepperoni Pizza", price: 5000 },
-      { name: "BBQ Pizza", price: 5500 }
-    ]
-  };
+async function sendMenu(slug, twiml, res) {
 
-  const menu = menus[code];
+  const restaurantRef = db.collection("restaurants").doc(slug);
+  const restaurant = await restaurantRef.get();
 
-  if (!menu) {
+  if (!restaurant.exists) {
     twiml.message("Restaurant not found.");
   } else {
-    let text = "🍽 Menu:\n\n";
-    menu.forEach((item, i) => {
-      text += `${i + 1}️⃣ ${item.name} – ₦${item.price}\n`;
+
+    const menuSnapshot = await restaurantRef.collection("menu").get();
+
+    let text = `🍽 ${restaurant.data().name} Menu\n\n`;
+
+    let index = 1;
+
+    menuSnapshot.forEach(doc => {
+      const item = doc.data();
+      text += `${index}️⃣ ${item.name} – ₦${item.price}\n`;
+      index++;
     });
+
     text += "\nReply with item number.";
 
     twiml.message(text);
