@@ -1,22 +1,22 @@
-function sendMenu(slug, twiml, res) {
+const menus = {
+  mamaput: {
+    name: "Mama Put Yaba",
+    area: "yaba",
+    menu: [
+      { id: 1, name: "Jollof Rice", price: 2000 },
+      { id: 2, name: "Fried Rice", price: 2500 },
+      { id: 3, name: "Amala + Egusi", price: 3000 }
+    ]
+  },
 
-  const restaurant = menus[slug];
-
-  if (!restaurant) {
-    twiml.message("Restaurant not found.");
-  } else {
-
-    let text = `🍽 ${restaurant.name} Menu\n\n`;
-
-    restaurant.menu.forEach((item) => {
-      text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
-    });
-
-    text += "\nReply with item number.";
-
-    twiml.message(text);
+  pizzahub: {
+    name: "Pizza Hub Lekki",
+    area: "lekki",
+    menu: [
+      { id: 1, name: "Pepperoni Pizza", price: 5000 },
+      { id: 2, name: "BBQ Chicken Pizza", price: 5500 }
+    ]
   }
+};
 
-  res.type("text/xml");
-  res.send(twiml.toString());
-}
+module.exports = menus;
