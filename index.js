@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const twilio = require("twilio");
-
+const menus = require("./menus");
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -78,13 +78,13 @@ app.post("/webhook", async (req, res) => {
 
   console.log("Incoming:", message);
 
-  if (message.startsWith("menu_")) {
+if (message.startsWith("menu_")) {
 
-    const slug = message.replace("menu_", "");
+  const slug = message.replace("menu_", "");
 
-    await sendMenu(slug, twiml, res);
-    return;
-  }
+  sendMenu(slug, twiml, res);
+  return;
+}
 
   if (message === "hi") {
     twiml.message("Welcome 👋 Send 1 for Lekki, 2 for Yaba.");
@@ -96,26 +96,18 @@ app.post("/webhook", async (req, res) => {
   res.send(twiml.toString());
 });
 
+function sendMenu(slug, twiml, res) {
 
-async function sendMenu(slug, twiml, res) {
+  const restaurant = menus[slug];
 
-  const restaurantRef = db.collection("restaurants").doc(slug);
-  const restaurant = await restaurantRef.get();
-
-  if (!restaurant.exists) {
+  if (!restaurant) {
     twiml.message("Restaurant not found.");
   } else {
 
-    const menuSnapshot = await restaurantRef.collection("menu").get();
+    let text = `🍽 ${restaurant.name} Menu\n\n`;
 
-    let text = `🍽 ${restaurant.data().name} Menu\n\n`;
-
-    let index = 1;
-
-    menuSnapshot.forEach(doc => {
-      const item = doc.data();
-      text += `${index}️⃣ ${item.name} – ₦${item.price}\n`;
-      index++;
+    restaurant.menu.forEach((item) => {
+      text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
     });
 
     text += "\nReply with item number.";
