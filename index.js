@@ -1,123 +1,116 @@
 require("dotenv").config();
 const express = require("express");
 const twilio = require("twilio");
-const menus = require("./menus");
+const { getSession, resetSession } = require("./sessions");
+const { getMenu } = require("./menus");
+const { createPaymentLink } = require("./paystack");
+
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
-
-app.post("/send", async (req, res) => {
-  try {
-    const { to, message } = req.body;
-
-    const response = await client.messages.create({
-      from: "whatsapp:+14155238886", // Twilio Sandbox number
-      to: `whatsapp:${to}`,
-      body: message
-    });
-
-    res.json({ success: true, sid: response.sid });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/", (req, res) => {
-  res.send("Twilio server running 🚀");
-});
-
-// app.post("/webhook", (req, res) => {
-//   // const twilio = require("twilio");
-//   const twiml = new twilio.twiml.MessagingResponse();
-
-//   const from = req.body.From;
-//   const message = req.body.Body.trim();
-
-//   if (!sessions[from]) {
-//     sessions[from] = { step: "start", cart: [] };
-//   }
-
-//   const user = sessions[from];
-
-//   if (user.step === "start") {
-//     twiml.message(
-//       "Welcome 👋 Choose restaurant:\n1️⃣ Mama Put\n2️⃣ Pizza Hub"
-//     );
-//     user.step = "choose_restaurant";
-//   }
-
-//   else if (user.step === "choose_restaurant") {
-//     if (message === "1") {
-//       user.restaurant = "Mama Put";
-//       user.step = "menu";
-//       twiml.message(
-//         "Menu:\n1️⃣ Jollof Rice – ₦2000\n2️⃣ Fried Rice – ₦2500"
-//       );
-//     }
-//   }
-
-//   else if (user.step === "menu") {
-//     if (message === "1") {
-//       user.cart.push("Jollof Rice");
-//       twiml.message("Added to cart ✅\nType checkout to pay.");
-//     }
-//   }
-
-//   res.type("text/xml");
-//   res.send(twiml.toString());
-// });
 
 app.post("/webhook", async (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
 
+  const from = req.body.From;
   const message = req.body.Body?.trim().toLowerCase() || "";
+
+  const user = getSession(from);
 
   console.log("Incoming:", message);
 
-if (message.startsWith("menu_")) {
+  // ===== ENTRY (QR LINK) =====
+  if (message.startsWith("menu_")) {
+    const code = message.split("_")[1];
+    const menu = getMenu(code);
 
-  const slug = message.replace("menu_", "");
+    if (!menu) {
+      twiml.message("Restaurant not found");
+    } else {
+      user.restaurant = code;
+      user.step = "menu";
 
-  sendMenu(slug, twiml, res);
-  return;
-}
+      let text = "🍽 Menu\n\n";
+      menu.forEach(item => {
+        text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
+      });
+      text += "\nReply with item number";
 
-  if (message === "hi") {
-    twiml.message("Welcome 👋 Send 1 for Lekki, 2 for Yaba.");
-  } else {
-    twiml.message("Send 'hi' to start 🍽");
+      twiml.message(text);
+    }
+  }
+
+  // ===== MENU SELECTION =====
+  else if (user.step === "menu") {
+    const menu = getMenu(user.restaurant);
+    const item = menu.find(i => i.id == message);
+
+    if (item) {
+      user.cart.push(item);
+      twiml.message(`Added ${item.name} ✅\nType more or 'checkout'`);
+    } else if (message === "checkout") {
+      let total = user.cart.reduce((sum, i) => sum + i.price, 0);
+      total += 200; // your fee
+
+      user.total = total;
+
+      let summary = "🧾 Order\n\n";
+      user.cart.forEach(i => {
+        summary += `${i.name} – ₦${i.price}\n`;
+      });
+
+      summary += `\nFee: ₦200\nTotal: ₦${total}`;
+      summary += `\n\nReply PAY to continue`;
+
+      twiml.message(summary);
+      user.step = "checkout";
+    } else {
+      twiml.message("Invalid option");
+    }
+  }
+
+  // ===== PAYMENT =====
+  else if (user.step === "checkout") {
+    if (message === "pay") {
+      const link = await createPaymentLink(user.total, from);
+
+      twiml.message(`💳 Pay here:\n${link}`);
+      user.step = "paid";
+    } else {
+      twiml.message("Type PAY to proceed");
+    }
+  }
+
+  // ===== AFTER PAYMENT (SIMPLIFIED) =====
+  else if (user.step === "paid") {
+    twiml.message("✅ Order received! Restaurant will prepare your food.");
+
+    // 🔥 SEND TO RESTAURANT (hardcoded for now)
+    await client.messages.create({
+      from: process.env.TWILIO_WHATSAPP,
+      to: "whatsapp:+2349078757814",
+      body: `NEW ORDER\n\n${JSON.stringify(user.cart)}`
+    });
+
+    resetSession(from);
+  }
+
+  else {
+    twiml.message("Send QR or type menu_mamaput to start");
   }
 
   res.type("text/xml");
   res.send(twiml.toString());
 });
 
-function sendMenu(slug, twiml, res) {
+app.get("/", (req, res) => {
+  res.send("Bot running 🚀");
+});
 
-  const restaurant = menus[slug];
-
-  if (!restaurant) {
-    twiml.message("Restaurant not found.");
-  } else {
-
-    let text = `🍽 ${restaurant.name} Menu\n\n`;
-
-    restaurant.menu.forEach((item) => {
-      text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
-    });
-
-    text += "\nReply with item number.";
-
-    twiml.message(text);
-  }
-
-  res.type("text/xml");
-  res.send(twiml.toString());
-}
-
+app.listen(process.env.PORT, () =>
+  console.log(`Server running on ${process.env.PORT}`)
+);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
