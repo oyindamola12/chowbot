@@ -1,14 +1,23 @@
 const express = require("express");
 const twilio = require("twilio");
 const menus = require("./menus");
-const db = require("./firestore");
+const bodyParser = require("body-parser");
+// const db = require("./firestore");
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 require("dotenv").config();
 
 
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+const db = admin.firestore();
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
 
 app.post("/send", async (req, res) => {
