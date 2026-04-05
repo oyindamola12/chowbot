@@ -108,15 +108,42 @@ async function getMenu(restaurantId) {
 //   res.send(twiml.toString());
 // }
 
+// async function sendMenu(slug, twiml, res) {
+//   try {
+//     const menu = await getMenu(slug);
+//     const restaurant = await getRestaurant(slug);
+
+//     if (!menu || !restaurant) {
+//       twiml.message("Restaurant not found.");
+//     } else {
+//       let text = `🍽 ${restaurant.name} Menu\n\n`;
+
+//       menu.forEach((item) => {
+//         text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
+//       });
+
+//       text += "\nReply with item number.";
+
+//       twiml.message(text);
+//     }
+
+//     res.type("text/xml");
+//     res.send(twiml.toString());
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).send("Error");
+//   }
+// }
+
 async function sendMenu(slug, twiml, res) {
   try {
     const menu = await getMenu(slug);
-    const restaurant = await getRestaurant(slug);
 
-    if (!menu || !restaurant) {
+    if (!menu) {
       twiml.message("Restaurant not found.");
     } else {
-      let text = `🍽 ${restaurant.name} Menu\n\n`;
+      let text = `🍽 Menu\n\n`;
 
       menu.forEach((item) => {
         text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
