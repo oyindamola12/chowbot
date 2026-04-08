@@ -170,7 +170,7 @@ async function getRestaurantPhone(id) {
 
   if (!doc.exists) return null;
 
-  return doc.data().phoneNumber;
+  return doc.data().phone;
 }
 
 async function notifyRestaurant(phone, message) {
