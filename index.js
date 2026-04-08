@@ -90,8 +90,8 @@ app.post("/webhook", async (req, res) => {
   }
 
   // 🟢 OPEN MENU
-  else if (message.startsWith("menu_")) {
-    const slug = message.replace("menu_", "");
+  else if (message.startsWith("mama")) {
+    const slug = message.replace("mama", "");
 
     user.restaurant = slug;
 
