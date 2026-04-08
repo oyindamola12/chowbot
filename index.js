@@ -155,6 +155,15 @@ app.get("/", (req, res) => {
 //   res.type("text/xml");
 //   res.send(twiml.toString());
 // });
+async function saveOrder(order) {
+  const doc = await db.collection("orders").add({
+    ...order,
+    status: "pending",
+    createdAt: new Date()
+  });
+
+  return doc.id;
+}
 
 app.post("/webhook", async (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
@@ -250,20 +259,48 @@ app.post("/webhook", async (req, res) => {
     }
 
     // 🟢 PAYMENT (TEMP)
+    // else if (message === "pay") {
+    //   if (user.cart.length === 0) {
+    //     twiml.message("⚠️ Your cart is empty.");
+    //   } else {
+    //     twiml.message("✅ Order received! (Next: payment integration)");
+
+    //     // RESET
+    //     user.cart = [];
+    //     user.restaurant = null;
+    //     user.total = 0;
+    //     user.step = "start";
+    //   }
+    // }
+
     else if (message === "pay") {
-      if (user.cart.length === 0) {
-        twiml.message("⚠️ Your cart is empty.");
-      } else {
-        twiml.message("✅ Order received! (Next: payment integration)");
+  if (user.cart.length === 0) {
+    twiml.message("⚠️ Your cart is empty.");
+  } else {
 
-        // RESET
-        user.cart = [];
-        user.restaurant = null;
-        user.total = 0;
-        user.step = "start";
-      }
-    }
+    // ✅ Prepare order data
+    const orderData = {
+      userPhone: from,
+      restaurantId: user.restaurant,
+      items: user.cart,
+      total: user.total
+    };
 
+    // ✅ Save to Firestore
+    const orderId = await saveOrder(orderData);
+
+    // ✅ Reply to user
+    twiml.message(
+      `✅ Order placed successfully!\n\nOrder ID: ${orderId}\n\nWe are processing your order 🍽`
+    );
+
+    // 🔄 Reset session
+    user.cart = [];
+    user.restaurant = null;
+    user.total = 0;
+    user.step = "start";
+  }
+}
     // 🟢 RESET COMMAND (VERY USEFUL)
     else if (message === "reset") {
       sessions[from] = {
