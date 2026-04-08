@@ -179,7 +179,7 @@ app.get("/test-db", async (req, res) => {
 // }
 
 async function getMenu(restaurantId) {
-  const doc = await db.collection("`Menus").doc('mamaput').get();
+  const doc = await db.collection("`Menus").doc(restaurantId).get();
 
   if (!doc.exists) return null;
 
