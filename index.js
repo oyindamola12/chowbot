@@ -3,7 +3,7 @@ const twilio = require("twilio");
 const menus = require("./menus");
 const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
-// const db = require("./firestore");
+const axios = require("axios");
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -181,6 +181,32 @@ async function notifyRestaurant(phone, message) {
   });
 }
 
+
+async function createPaymentLink(email, amount, metadata) {
+  try {
+    const response = await axios.post(
+      "https://api.paystack.co/transaction/initialize",
+      {
+        email,
+        amount: amount * 100, // Paystack uses kobo
+        metadata
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    return response.data.data.authorization_url;
+
+  } catch (error) {
+    console.error("Paystack Error:", error.response?.data || error.message);
+    return null;
+  }
+}
+
 app.post("/webhook", async (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
 
@@ -275,26 +301,14 @@ app.post("/webhook", async (req, res) => {
     }
 
     // 🟢 PAYMENT (TEMP)
-    // else if (message === "pay") {
-    //   if (user.cart.length === 0) {
-    //     twiml.message("⚠️ Your cart is empty.");
-    //   } else {
-    //     twiml.message("✅ Order received! (Next: payment integration)");
 
-    //     // RESET
-    //     user.cart = [];
-    //     user.restaurant = null;
-    //     user.total = 0;
-    //     user.step = "start";
-    //   }
-    // }
 
-//     else if (message === "pay") {
+// else if (message === "pay") {
 //   if (user.cart.length === 0) {
 //     twiml.message("⚠️ Your cart is empty.");
 //   } else {
 
-//     // ✅ Prepare order data
+//     // ✅ Prepare order
 //     const orderData = {
 //       userPhone: from,
 //       restaurantId: user.restaurant,
@@ -302,15 +316,34 @@ app.post("/webhook", async (req, res) => {
 //       total: user.total
 //     };
 
-//     // ✅ Save to Firestore
+//     // ✅ Save order
 //     const orderId = await saveOrder(orderData);
+
+//     // ✅ Get restaurant phone
+//     const phone = await getRestaurantPhone(user.restaurant);
+
+//     // ✅ Build message
+//     let restaurantMsg = `📦 New Order!\n\n`;
+
+//     user.cart.forEach(item => {
+//       restaurantMsg += `${item.name} – ₦${item.price}\n`;
+//     });
+
+//     restaurantMsg += `\nTotal: ₦${user.total}`;
+//     restaurantMsg += `\nCustomer: ${from}`;
+//     restaurantMsg += `\nOrder ID: ${orderId}`;
+
+//     // ✅ Send to restaurant
+//     if (phone) {
+//       await notifyRestaurant(phone, restaurantMsg);
+//     }
 
 //     // ✅ Reply to user
 //     twiml.message(
-//       `✅ Order placed successfully!\n\nOrder ID: ${orderId}\n\nWe are processing your order 🍽`
+//       `✅ Order placed successfully!\n\nOrder ID: ${orderId}\n\nRestaurant has been notified 🍽`
 //     );
 
-//     // 🔄 Reset session
+//     // 🔄 Reset
 //     user.cart = [];
 //     user.restaurant = null;
 //     user.total = 0;
@@ -318,52 +351,29 @@ app.post("/webhook", async (req, res) => {
 //   }
 // }
 
-
 else if (message === "pay") {
   if (user.cart.length === 0) {
     twiml.message("⚠️ Your cart is empty.");
   } else {
 
-    // ✅ Prepare order
-    const orderData = {
-      userPhone: from,
-      restaurantId: user.restaurant,
-      items: user.cart,
-      total: user.total
-    };
+    const email = "mshittu234@gmail.com"; // later collect from user
 
-    // ✅ Save order
-    const orderId = await saveOrder(orderData);
-
-    // ✅ Get restaurant phone
-    const phone = await getRestaurantPhone(user.restaurant);
-
-    // ✅ Build message
-    let restaurantMsg = `📦 New Order!\n\n`;
-
-    user.cart.forEach(item => {
-      restaurantMsg += `${item.name} – ₦${item.price}\n`;
-    });
-
-    restaurantMsg += `\nTotal: ₦${user.total}`;
-    restaurantMsg += `\nCustomer: ${from}`;
-    restaurantMsg += `\nOrder ID: ${orderId}`;
-
-    // ✅ Send to restaurant
-    if (phone) {
-      await notifyRestaurant(phone, restaurantMsg);
-    }
-
-    // ✅ Reply to user
-    twiml.message(
-      `✅ Order placed successfully!\n\nOrder ID: ${orderId}\n\nRestaurant has been notified 🍽`
+    const paymentLink = await createPaymentLink(
+      email,
+      user.total,
+      {
+        phone: from,
+        restaurant: user.restaurant
+      }
     );
 
-    // 🔄 Reset
-    user.cart = [];
-    user.restaurant = null;
-    user.total = 0;
-    user.step = "start";
+    if (!paymentLink) {
+      twiml.message("❌ Payment failed. Try again.");
+    } else {
+      twiml.message(
+        `💳 Complete your payment:\n${paymentLink}\n\nAfter payment, your order will be confirmed.`
+      );
+    }
   }
 }
     // 🟢 RESET COMMAND (VERY USEFUL)
@@ -505,6 +515,36 @@ async function getMenu(restaurantId) {
 // }
 
 
+app.post("/paystack/webhook", express.json(), async (req, res) => {
+  const event = req.body;
+
+  if (event.event === "charge.success") {
+    const data = event.data;
+
+    const metadata = data.metadata;
+
+    const orderData = {
+      userPhone: metadata.phone,
+      restaurantId: metadata.restaurant,
+      items: [], // we will improve this next
+      total: data.amount / 100
+    };
+
+    const orderId = await saveOrder(orderData);
+
+    const phone = await getRestaurantPhone(metadata.restaurant);
+
+    let msg = `📦 Paid Order!\n\nTotal: ₦${orderData.total}\nCustomer: ${metadata.phone}`;
+
+    if (phone) {
+      await notifyRestaurant(phone, msg);
+    }
+
+    console.log("Payment verified & order saved:", orderId);
+  }
+
+  res.sendStatus(200);
+});
 async function sendMenu(slug, twiml, res) {
   try {
     const menu = await getMenu(slug);
