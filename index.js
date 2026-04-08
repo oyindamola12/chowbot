@@ -356,22 +356,23 @@ else if (message === "pay") {
     twiml.message("⚠️ Your cart is empty.");
   } else {
 
-    const email = "mshittu234@gmail.com"; // later collect from user
+    const email = "mshittu234@gmail.com";
 
     const paymentLink = await createPaymentLink(
       email,
       user.total,
       {
         phone: from,
-        restaurant: user.restaurant
+        restaurant: user.restaurant,
+        cart: JSON.stringify(user.cart) // 🔥 IMPORTANT
       }
     );
 
     if (!paymentLink) {
-      twiml.message("❌ Payment failed. Try again.");
+      twiml.message("❌ Payment failed.");
     } else {
       twiml.message(
-        `💳 Complete your payment:\n${paymentLink}\n\nAfter payment, your order will be confirmed.`
+        `💳 Pay here:\n${paymentLink}\n\nYour order will be confirmed after payment.`
       );
     }
   }
@@ -514,19 +515,26 @@ async function getMenu(restaurantId) {
 //   }
 // }
 
-
 app.post("/paystack/webhook", express.json(), async (req, res) => {
   const event = req.body;
 
   if (event.event === "charge.success") {
     const data = event.data;
-
     const metadata = data.metadata;
+
+    // 🔥 GET CART BACK
+    let cart = [];
+
+    try {
+      cart = JSON.parse(metadata.cart);
+    } catch (err) {
+      console.error("Cart parse error:", err);
+    }
 
     const orderData = {
       userPhone: metadata.phone,
       restaurantId: metadata.restaurant,
-      items: [], // we will improve this next
+      items: cart, // ✅ FULL ITEMS NOW
       total: data.amount / 100
     };
 
@@ -534,13 +542,22 @@ app.post("/paystack/webhook", express.json(), async (req, res) => {
 
     const phone = await getRestaurantPhone(metadata.restaurant);
 
-    let msg = `📦 Paid Order!\n\nTotal: ₦${orderData.total}\nCustomer: ${metadata.phone}`;
+    // 🔥 FULL ORDER MESSAGE
+    let msg = `📦 Paid Order!\n\n`;
+
+    cart.forEach(item => {
+      msg += `${item.name} – ₦${item.price}\n`;
+    });
+
+    msg += `\nTotal: ₦${orderData.total}`;
+    msg += `\nCustomer: ${metadata.phone}`;
+    msg += `\nOrder ID: ${orderId}`;
 
     if (phone) {
       await notifyRestaurant(phone, msg);
     }
 
-    console.log("Payment verified & order saved:", orderId);
+    console.log("✅ FULL order saved:", orderId);
   }
 
   res.sendStatus(200);
