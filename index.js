@@ -165,6 +165,22 @@ async function saveOrder(order) {
   return doc.id;
 }
 
+async function getRestaurantPhone(id) {
+  const doc = await db.collection("Menus").doc(id).get();
+
+  if (!doc.exists) return null;
+
+  return doc.data().phoneNumber;
+}
+
+async function notifyRestaurant(phone, message) {
+  await client.messages.create({
+    from: "whatsapp:+14155238886",
+    to: `whatsapp:${phone}`,
+    body: message
+  });
+}
+
 app.post("/webhook", async (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
 
@@ -273,12 +289,42 @@ app.post("/webhook", async (req, res) => {
     //   }
     // }
 
-    else if (message === "pay") {
+//     else if (message === "pay") {
+//   if (user.cart.length === 0) {
+//     twiml.message("⚠️ Your cart is empty.");
+//   } else {
+
+//     // ✅ Prepare order data
+//     const orderData = {
+//       userPhone: from,
+//       restaurantId: user.restaurant,
+//       items: user.cart,
+//       total: user.total
+//     };
+
+//     // ✅ Save to Firestore
+//     const orderId = await saveOrder(orderData);
+
+//     // ✅ Reply to user
+//     twiml.message(
+//       `✅ Order placed successfully!\n\nOrder ID: ${orderId}\n\nWe are processing your order 🍽`
+//     );
+
+//     // 🔄 Reset session
+//     user.cart = [];
+//     user.restaurant = null;
+//     user.total = 0;
+//     user.step = "start";
+//   }
+// }
+
+
+else if (message === "pay") {
   if (user.cart.length === 0) {
     twiml.message("⚠️ Your cart is empty.");
   } else {
 
-    // ✅ Prepare order data
+    // ✅ Prepare order
     const orderData = {
       userPhone: from,
       restaurantId: user.restaurant,
@@ -286,15 +332,34 @@ app.post("/webhook", async (req, res) => {
       total: user.total
     };
 
-    // ✅ Save to Firestore
+    // ✅ Save order
     const orderId = await saveOrder(orderData);
+
+    // ✅ Get restaurant phone
+    const phone = await getRestaurantPhone(user.restaurant);
+
+    // ✅ Build message
+    let restaurantMsg = `📦 New Order!\n\n`;
+
+    user.cart.forEach(item => {
+      restaurantMsg += `${item.name} – ₦${item.price}\n`;
+    });
+
+    restaurantMsg += `\nTotal: ₦${user.total}`;
+    restaurantMsg += `\nCustomer: ${from}`;
+    restaurantMsg += `\nOrder ID: ${orderId}`;
+
+    // ✅ Send to restaurant
+    if (phone) {
+      await notifyRestaurant(phone, restaurantMsg);
+    }
 
     // ✅ Reply to user
     twiml.message(
-      `✅ Order placed successfully!\n\nOrder ID: ${orderId}\n\nWe are processing your order 🍽`
+      `✅ Order placed successfully!\n\nOrder ID: ${orderId}\n\nRestaurant has been notified 🍽`
     );
 
-    // 🔄 Reset session
+    // 🔄 Reset
     user.cart = [];
     user.restaurant = null;
     user.total = 0;
