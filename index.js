@@ -639,7 +639,7 @@ async function getRestaurant(id) {
 async function getRestaurantsByLocation(area) {
   const snapshot = await db
     .collection("restaurants")
-    .where("location", "==", area.toLowerCase())
+    .where("Area", "==", area.toLowerCase())
     .get();
 
   const list = [];
