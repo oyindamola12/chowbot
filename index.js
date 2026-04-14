@@ -1,68 +1,211 @@
-const express = require("express");
-const twilio = require("twilio");
-const menus = require("./menus");
-const bodyParser = require("body-parser");
-const admin = require("firebase-admin");
-const axios = require("axios");
-const app = express();
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-require("dotenv").config();
+// const express = require("express");
+// const twilio = require("twilio");
+// const menus = require("./menus");
+// const bodyParser = require("body-parser");
+// const admin = require("firebase-admin");
+// const axios = require("axios");
+// const app = express();
+// app.use(express.urlencoded({ extended: false }));
+// app.use(express.json());
+// app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({ extended: true }));
+// require("dotenv").config();
 
-const sessions = {};
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+// const sessions = {};
+// const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
-
-const db = admin.firestore();
-const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
-
-app.post("/send", async (req, res) => {
-  try {
-    const { to, message } = req.body;
-
-    const response = await client.messages.create({
-      from: "whatsapp:+14155238886", // Twilio Sandbox number
-      to: `whatsapp:${to}`,
-      body: message
-    });
-
-    res.json({ success: true, sid: response.sid });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/", (req, res) => {
-  res.send("Twilio server running 🚀");
-});
-
-// app.post("/webhook", async (req, res) => {
-//   const twiml = new twilio.twiml.MessagingResponse();
-//   const message = req.body.Body?.trim().toLowerCase() || "";
-//   console.log("Incoming:", message);
-
-// if (message.startsWith("menu_")) {
-//   const slug = message.replace("menu_", "");
-//   sendMenu(slug, twiml, res);
-//   return;
-// }
-
-//   if (message === "hi") {
-//     twiml.message("Welcome 👋 Send 1 for Lekki, 2 for Yaba.");
-//   } else {
-//     twiml.message("Send 'hi' to start 🍽");
-//   }
-
-//   res.type("text/xml");
-//   res.send(twiml.toString());
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
 // });
 
+// const db = admin.firestore();
+// const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+
+// app.post("/send", async (req, res) => {
+//   try {
+//     const { to, message } = req.body;
+
+//     const response = await client.messages.create({
+//       from: "whatsapp:+14155238886", // Twilio Sandbox number
+//       to: `whatsapp:${to}`,
+//       body: message
+//     });
+
+//     res.json({ success: true, sid: response.sid });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+// app.get("/", (req, res) => {
+//   res.send("Twilio server running 🚀");
+// });
+
+// // app.post("/webhook", async (req, res) => {
+// //   const twiml = new twilio.twiml.MessagingResponse();
+// //   const message = req.body.Body?.trim().toLowerCase() || "";
+// //   console.log("Incoming:", message);
+
+// // if (message.startsWith("menu_")) {
+// //   const slug = message.replace("menu_", "");
+// //   sendMenu(slug, twiml, res);
+// //   return;
+// // }
+
+// //   if (message === "hi") {
+// //     twiml.message("Welcome 👋 Send 1 for Lekki, 2 for Yaba.");
+// //   } else {
+// //     twiml.message("Send 'hi' to start 🍽");
+// //   }
+
+// //   res.type("text/xml");
+// //   res.send(twiml.toString());
+// // });
+
+
+// // app.post("/webhook", async (req, res) => {
+// //   const twiml = new twilio.twiml.MessagingResponse();
+
+// //   const from = req.body.From;
+// //   const message = req.body.Body?.trim().toLowerCase() || "";
+
+// //   console.log("Incoming:", message);
+
+// //   // SESSION INIT
+// //   if (!sessions[from]) {
+// //     sessions[from] = {
+// //       cart: [],
+// //       step: "start",
+// //       restaurant: null,
+// //       total: 0
+// //     };
+// //   }
+
+// //   const user = sessions[from];
+
+// //   // 🟢 START
+// //   if (message === "hi") {
+// //     twiml.message("🍽 Welcome!\n\nType:\nmenu_mamaput");
+// //   }
+
+// //   // 🟢 OPEN MENU
+// //   else if (message.startsWith("menu_")) {
+// //     const slug = message.replace("menu_", "");
+
+// //     user.restaurant = slug;
+
+// //     await sendMenu(slug, twiml, res);
+// //     return;
+// //   }
+
+// //   // 🟢 ADD ITEM TO CART
+// //   else if (!isNaN(message) && user.restaurant) {
+// //     const menu = await getMenu(user.restaurant);
+
+// //     const item = menu.find(i => i.id == message);
+
+// //     if (item) {
+// //       user.cart.push(item);
+
+// //       twiml.message(
+// //         `✅ ${item.name} added\n\nType another number to add more or type 'checkout'`
+// //       );
+// //     } else {
+// //       twiml.message("Invalid item.");
+// //     }
+// //   }
+
+// //   // 🟢 CHECKOUT
+// //   else if (message === "checkout") {
+// //     if (user.cart.length === 0) {
+// //       twiml.message("Cart is empty.");
+// //     } else {
+// //       let text = "🧾 Your Order:\n\n";
+// //       let total = 0;
+
+// //       user.cart.forEach(item => {
+// //         text += `${item.name} – ₦${item.price}\n`;
+// //         total += item.price;
+// //       });
+
+// //       user.total = total;
+
+// //       text += `\nTotal: ₦${total}`;
+// //       text += `\n\nType PAY to confirm`;
+
+// //       twiml.message(text);
+// //     }
+// //   }
+
+// //   // 🟢 PAYMENT (TEMP)
+// //   else if (message === "pay") {
+// //     twiml.message("✅ Order received! (Next: payment)");
+
+// //     user.cart = [];
+// //     user.step = "start";
+// //     user.restaurant = null;
+// //   }
+
+// //   // 🟢 DEFAULT
+// //   else {
+// //     twiml.message("Send 'hi' to start 🍽");
+// //   }
+
+// //   res.type("text/xml");
+// //   res.send(twiml.toString());
+// // });
+// async function saveOrder(order) {
+//   const doc = await db.collection("orders").add({
+//     ...order,
+//     status: "pending",
+//     createdAt: new Date()
+//   });
+
+//   return doc.id;
+// }
+
+// async function getRestaurantPhone(id) {
+//   const doc = await db.collection("Menus").doc(id).get();
+
+//   if (!doc.exists) return null;
+
+//   return doc.data().phone;
+// }
+
+// async function notifyRestaurant(phone, message) {
+//   await client.messages.create({
+//     from: "whatsapp:+14155238886",
+//     to: `whatsapp:${phone}`,
+//     body: message
+//   });
+// }
+
+
+// async function createPaymentLink(email, amount, metadata) {
+//   try {
+//     const response = await axios.post(
+//       "https://api.paystack.co/transaction/initialize",
+//       {
+//         email,
+//         amount: amount * 100, // Paystack uses kobo
+//         metadata
+//       },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${process.env.PAYSTACK_SECRET}`,
+//           "Content-Type": "application/json"
+//         }
+//       }
+//     );
+
+//     return response.data.data.authorization_url;
+
+//   } catch (error) {
+//     console.error("Paystack Error:", error.response?.data || error.message);
+//     return null;
+//   }
+// }
 
 // app.post("/webhook", async (req, res) => {
 //   const twiml = new twilio.twiml.MessagingResponse();
@@ -72,7 +215,7 @@ app.get("/", (req, res) => {
 
 //   console.log("Incoming:", message);
 
-//   // SESSION INIT
+//   // ✅ INIT SESSION
 //   if (!sessions[from]) {
 //     sessions[from] = {
 //       cart: [],
@@ -84,410 +227,341 @@ app.get("/", (req, res) => {
 
 //   const user = sessions[from];
 
-//   // 🟢 START
-//   if (message === "hi") {
-//     twiml.message("🍽 Welcome!\n\nType:\nmenu_mamaput");
-//   }
+//   try {
+//     // 🟢 START
+//     if (message === "hi") {
+//       user.cart = [];
+//       user.restaurant = null;
 
-//   // 🟢 OPEN MENU
-//   else if (message.startsWith("menu_")) {
-//     const slug = message.replace("menu_", "");
-
-//     user.restaurant = slug;
-
-//     await sendMenu(slug, twiml, res);
-//     return;
-//   }
-
-//   // 🟢 ADD ITEM TO CART
-//   else if (!isNaN(message) && user.restaurant) {
-//     const menu = await getMenu(user.restaurant);
-
-//     const item = menu.find(i => i.id == message);
-
-//     if (item) {
-//       user.cart.push(item);
-
-//       twiml.message(
-//         `✅ ${item.name} added\n\nType another number to add more or type 'checkout'`
-//       );
-//     } else {
-//       twiml.message("Invalid item.");
+//       twiml.message("🍽 Welcome!\n\nType:\nmenu_mamaput");
 //     }
-//   }
 
-//   // 🟢 CHECKOUT
-//   else if (message === "checkout") {
-//     if (user.cart.length === 0) {
-//       twiml.message("Cart is empty.");
-//     } else {
-//       let text = "🧾 Your Order:\n\n";
-//       let total = 0;
+//     // 🟢 OPEN MENU
+//     else if (message.startsWith("menu_")) {
+//       const slug = message.replace("menu_", "").trim();
 
-//       user.cart.forEach(item => {
-//         text += `${item.name} – ₦${item.price}\n`;
-//         total += item.price;
-//       });
+//       const menu = await getMenu(slug);
 
-//       user.total = total;
-
-//       text += `\nTotal: ₦${total}`;
-//       text += `\n\nType PAY to confirm`;
-
-//       twiml.message(text);
+//       if (!menu) {
+//         twiml.message("❌ Restaurant not found.");
+//       } else {
+//         user.restaurant = slug;
+//         await sendMenu(slug, twiml, res);
+//         return; // IMPORTANT
+//       }
 //     }
-//   }
 
-//   // 🟢 PAYMENT (TEMP)
-//   else if (message === "pay") {
-//     twiml.message("✅ Order received! (Next: payment)");
+//     // 🟢 ADD ITEM TO CART
+//     else if (!isNaN(message)) {
+//       if (!user.restaurant) {
+//         twiml.message("⚠️ Please select a restaurant first.\nType menu_mamaput");
+//       } else {
+//         const menu = await getMenu(user.restaurant);
 
-//     user.cart = [];
-//     user.step = "start";
-//     user.restaurant = null;
-//   }
+//         if (!menu) {
+//           twiml.message("❌ Menu not available.");
+//         } else {
+//           const item = menu.find(i => Number(i.id) === Number(message));
 
-//   // 🟢 DEFAULT
-//   else {
-//     twiml.message("Send 'hi' to start 🍽");
-//   }
+//           if (item) {
+//             user.cart.push(item);
 
-//   res.type("text/xml");
-//   res.send(twiml.toString());
-// });
-async function saveOrder(order) {
-  const doc = await db.collection("orders").add({
-    ...order,
-    status: "pending",
-    createdAt: new Date()
-  });
+//             twiml.message(
+//               `✅ ${item.name} added\n\n` +
+//               `Type another number to add more\n` +
+//               `or type 'checkout'`
+//             );
+//           } else {
+//             twiml.message("❌ Invalid item number.");
+//           }
+//         }
+//       }
+//     }
 
-  return doc.id;
-}
+//     // 🟢 CHECKOUT
+//     else if (message === "checkout") {
+//       if (user.cart.length === 0) {
+//         twiml.message("🛒 Cart is empty.");
+//       } else {
+//         let text = "🧾 Your Order:\n\n";
+//         let total = 0;
 
-async function getRestaurantPhone(id) {
-  const doc = await db.collection("Menus").doc(id).get();
+//         user.cart.forEach(item => {
+//           text += `${item.name} – ₦${item.price}\n`;
+//           total += Number(item.price);
+//         });
 
-  if (!doc.exists) return null;
+//         user.total = total;
 
-  return doc.data().phone;
-}
+//         text += `\nTotal: ₦${total}`;
+//         text += `\n\nType PAY to confirm`;
 
-async function notifyRestaurant(phone, message) {
-  await client.messages.create({
-    from: "whatsapp:+14155238886",
-    to: `whatsapp:${phone}`,
-    body: message
-  });
-}
+//         twiml.message(text);
+//       }
+//     }
+
+//     // 🟢 PAYMENT (TEMP)
 
 
-async function createPaymentLink(email, amount, metadata) {
-  try {
-    const response = await axios.post(
-      "https://api.paystack.co/transaction/initialize",
-      {
-        email,
-        amount: amount * 100, // Paystack uses kobo
-        metadata
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
+// // else if (message === "pay") {
+// //   if (user.cart.length === 0) {
+// //     twiml.message("⚠️ Your cart is empty.");
+// //   } else {
 
-    return response.data.data.authorization_url;
+// //     // ✅ Prepare order
+// //     const orderData = {
+// //       userPhone: from,
+// //       restaurantId: user.restaurant,
+// //       items: user.cart,
+// //       total: user.total
+// //     };
 
-  } catch (error) {
-    console.error("Paystack Error:", error.response?.data || error.message);
-    return null;
-  }
-}
+// //     // ✅ Save order
+// //     const orderId = await saveOrder(orderData);
 
-app.post("/webhook", async (req, res) => {
-  const twiml = new twilio.twiml.MessagingResponse();
+// //     // ✅ Get restaurant phone
+// //     const phone = await getRestaurantPhone(user.restaurant);
 
-  const from = req.body.From;
-  const message = req.body.Body?.trim().toLowerCase() || "";
+// //     // ✅ Build message
+// //     let restaurantMsg = `📦 New Order!\n\n`;
 
-  console.log("Incoming:", message);
+// //     user.cart.forEach(item => {
+// //       restaurantMsg += `${item.name} – ₦${item.price}\n`;
+// //     });
 
-  // ✅ INIT SESSION
-  if (!sessions[from]) {
-    sessions[from] = {
-      cart: [],
-      step: "start",
-      restaurant: null,
-      total: 0
-    };
-  }
+// //     restaurantMsg += `\nTotal: ₦${user.total}`;
+// //     restaurantMsg += `\nCustomer: ${from}`;
+// //     restaurantMsg += `\nOrder ID: ${orderId}`;
 
-  const user = sessions[from];
+// //     // ✅ Send to restaurant
+// //     if (phone) {
+// //       await notifyRestaurant(phone, restaurantMsg);
+// //     }
 
-  try {
-    // 🟢 START
-    if (message === "hi") {
-      user.cart = [];
-      user.restaurant = null;
+// //     // ✅ Reply to user
+// //     twiml.message(
+// //       `✅ Order placed successfully!\n\nOrder ID: ${orderId}\n\nRestaurant has been notified 🍽`
+// //     );
 
-      twiml.message("🍽 Welcome!\n\nType:\nmenu_mamaput");
-    }
-
-    // 🟢 OPEN MENU
-    else if (message.startsWith("menu_")) {
-      const slug = message.replace("menu_", "").trim();
-
-      const menu = await getMenu(slug);
-
-      if (!menu) {
-        twiml.message("❌ Restaurant not found.");
-      } else {
-        user.restaurant = slug;
-        await sendMenu(slug, twiml, res);
-        return; // IMPORTANT
-      }
-    }
-
-    // 🟢 ADD ITEM TO CART
-    else if (!isNaN(message)) {
-      if (!user.restaurant) {
-        twiml.message("⚠️ Please select a restaurant first.\nType menu_mamaput");
-      } else {
-        const menu = await getMenu(user.restaurant);
-
-        if (!menu) {
-          twiml.message("❌ Menu not available.");
-        } else {
-          const item = menu.find(i => Number(i.id) === Number(message));
-
-          if (item) {
-            user.cart.push(item);
-
-            twiml.message(
-              `✅ ${item.name} added\n\n` +
-              `Type another number to add more\n` +
-              `or type 'checkout'`
-            );
-          } else {
-            twiml.message("❌ Invalid item number.");
-          }
-        }
-      }
-    }
-
-    // 🟢 CHECKOUT
-    else if (message === "checkout") {
-      if (user.cart.length === 0) {
-        twiml.message("🛒 Cart is empty.");
-      } else {
-        let text = "🧾 Your Order:\n\n";
-        let total = 0;
-
-        user.cart.forEach(item => {
-          text += `${item.name} – ₦${item.price}\n`;
-          total += Number(item.price);
-        });
-
-        user.total = total;
-
-        text += `\nTotal: ₦${total}`;
-        text += `\n\nType PAY to confirm`;
-
-        twiml.message(text);
-      }
-    }
-
-    // 🟢 PAYMENT (TEMP)
-
+// //     // 🔄 Reset
+// //     user.cart = [];
+// //     user.restaurant = null;
+// //     user.total = 0;
+// //     user.step = "start";
+// //   }
+// // }
 
 // else if (message === "pay") {
 //   if (user.cart.length === 0) {
 //     twiml.message("⚠️ Your cart is empty.");
 //   } else {
 
-//     // ✅ Prepare order
-//     const orderData = {
-//       userPhone: from,
-//       restaurantId: user.restaurant,
-//       items: user.cart,
-//       total: user.total
-//     };
+//     const email = "mshittu234@gmail.com";
 
-//     // ✅ Save order
-//     const orderId = await saveOrder(orderData);
-
-//     // ✅ Get restaurant phone
-//     const phone = await getRestaurantPhone(user.restaurant);
-
-//     // ✅ Build message
-//     let restaurantMsg = `📦 New Order!\n\n`;
-
-//     user.cart.forEach(item => {
-//       restaurantMsg += `${item.name} – ₦${item.price}\n`;
-//     });
-
-//     restaurantMsg += `\nTotal: ₦${user.total}`;
-//     restaurantMsg += `\nCustomer: ${from}`;
-//     restaurantMsg += `\nOrder ID: ${orderId}`;
-
-//     // ✅ Send to restaurant
-//     if (phone) {
-//       await notifyRestaurant(phone, restaurantMsg);
-//     }
-
-//     // ✅ Reply to user
-//     twiml.message(
-//       `✅ Order placed successfully!\n\nOrder ID: ${orderId}\n\nRestaurant has been notified 🍽`
+//     const paymentLink = await createPaymentLink(
+//       email,
+//       user.total,
+//       {
+//         phone: from,
+//         restaurant: user.restaurant,
+//         cart: JSON.stringify(user.cart) // 🔥 IMPORTANT
+//       }
 //     );
 
-//     // 🔄 Reset
-//     user.cart = [];
-//     user.restaurant = null;
-//     user.total = 0;
-//     user.step = "start";
-//   }
-// }
-
-else if (message === "pay") {
-  if (user.cart.length === 0) {
-    twiml.message("⚠️ Your cart is empty.");
-  } else {
-
-    const email = "mshittu234@gmail.com";
-
-    const paymentLink = await createPaymentLink(
-      email,
-      user.total,
-      {
-        phone: from,
-        restaurant: user.restaurant,
-        cart: JSON.stringify(user.cart) // 🔥 IMPORTANT
-      }
-    );
-
-    if (!paymentLink) {
-      twiml.message("❌ Payment failed.");
-    } else {
-      twiml.message(
-        `💳 Pay here:\n${paymentLink}\n\nYour order will be confirmed after payment.`
-      );
-    }
-  }
-}
-    // 🟢 RESET COMMAND (VERY USEFUL)
-    else if (message === "reset") {
-      sessions[from] = {
-        cart: [],
-        step: "start",
-        restaurant: null,
-        total: 0
-      };
-
-      twiml.message("🔄 Session reset. Type 'hi' to start again.");
-    }
-
-    // 🟢 DEFAULT
-    else {
-      twiml.message("Send 'hi' to start 🍽");
-    }
-
-    res.type("text/xml");
-    res.send(twiml.toString());
-
-  } catch (error) {
-    console.error("Webhook error:", error);
-
-    twiml.message("⚠️ Something went wrong. Please try again.");
-
-    res.type("text/xml");
-    res.send(twiml.toString());
-  }
-});
-
-app.get("/test-db", async (req, res) => {
-  try {
-    await db.collection("test").add({
-      name: "Chowbot",
-      createdAt: new Date()
-    });
-
-    res.send("Firestore working ✅");
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error");
-  }
-});
-
-// async function getMenu(restaurantId) {
-//   const doc = await db.collection("Menus").doc('mamaput').get();
-
-//   if (!doc.exists) return null;
-
-//   return doc.data().items;
-// }
-
-async function getMenu(restaurantId) {
-  const doc = await db.collection("Menus").doc(restaurantId).get();
-
-  if (!doc.exists) return null;
-
-  return doc.data().items;
-}
-//  async function sendMenu(slug, twiml, res) {
-
-//   // const restaurant = menus[slug];
-//       const restaurant = await getMenu(slug);
-
-//   if (!restaurant) {
-//     twiml.message("Restaurant not found.");
-//   } else {
-
-//     let text = `🍽 ${restaurant.name} Menu\n\n`;
-
-//     restaurant.menu.forEach((item) => {
-//       text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
-//     });
-
-//     text += "\nReply with item number.";
-
-//     twiml.message(text);
-//   }
-
-//   res.type("text/xml");
-//   res.send(twiml.toString());
-// }
-
-// async function sendMenu(slug, twiml, res) {
-//   try {
-//     const menu = await getMenu(slug);
-//     const restaurant = await getRestaurant(slug);
-
-//     if (!menu || !restaurant) {
-//       twiml.message("Restaurant not found.");
+//     if (!paymentLink) {
+//       twiml.message("❌ Payment failed.");
 //     } else {
-//       let text = `🍽 ${restaurant.name} Menu\n\n`;
+//       twiml.message(
+//         `💳 Pay here:\n${paymentLink}\n\nYour order will be confirmed after payment.`
+//       );
+//     }
+//   }
+// }
+//     // 🟢 RESET COMMAND (VERY USEFUL)
+//     else if (message === "reset") {
+//       sessions[from] = {
+//         cart: [],
+//         step: "start",
+//         restaurant: null,
+//         total: 0
+//       };
 
-//       menu.forEach((item) => {
-//         text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
-//       });
+//       twiml.message("🔄 Session reset. Type 'hi' to start again.");
+//     }
 
-//       text += "\nReply with item number.";
-
-//       twiml.message(text);
+//     // 🟢 DEFAULT
+//     else {
+//       twiml.message("Send 'hi' to start 🍽");
 //     }
 
 //     res.type("text/xml");
 //     res.send(twiml.toString());
 
+//   } catch (error) {
+//     console.error("Webhook error:", error);
+
+//     twiml.message("⚠️ Something went wrong. Please try again.");
+
+//     res.type("text/xml");
+//     res.send(twiml.toString());
+//   }
+// });
+
+// app.get("/test-db", async (req, res) => {
+//   try {
+//     await db.collection("test").add({
+//       name: "Chowbot",
+//       createdAt: new Date()
+//     });
+
+//     res.send("Firestore working ✅");
 //   } catch (err) {
 //     console.error(err);
 //     res.status(500).send("Error");
 //   }
-// }
+// });
 
+// // async function getMenu(restaurantId) {
+// //   const doc = await db.collection("Menus").doc('mamaput').get();
+
+// //   if (!doc.exists) return null;
+
+// //   return doc.data().items;
+// // }
+
+// async function getMenu(restaurantId) {
+//   const doc = await db.collection("Menus").doc(restaurantId).get();
+
+//   if (!doc.exists) return null;
+
+//   return doc.data().items;
+// }
+// //  async function sendMenu(slug, twiml, res) {
+
+// //   // const restaurant = menus[slug];
+// //       const restaurant = await getMenu(slug);
+
+// //   if (!restaurant) {
+// //     twiml.message("Restaurant not found.");
+// //   } else {
+
+// //     let text = `🍽 ${restaurant.name} Menu\n\n`;
+
+// //     restaurant.menu.forEach((item) => {
+// //       text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
+// //     });
+
+// //     text += "\nReply with item number.";
+
+// //     twiml.message(text);
+// //   }
+
+// //   res.type("text/xml");
+// //   res.send(twiml.toString());
+// // }
+
+// // async function sendMenu(slug, twiml, res) {
+// //   try {
+// //     const menu = await getMenu(slug);
+// //     const restaurant = await getRestaurant(slug);
+
+// //     if (!menu || !restaurant) {
+// //       twiml.message("Restaurant not found.");
+// //     } else {
+// //       let text = `🍽 ${restaurant.name} Menu\n\n`;
+
+// //       menu.forEach((item) => {
+// //         text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
+// //       });
+
+// //       text += "\nReply with item number.";
+
+// //       twiml.message(text);
+// //     }
+
+// //     res.type("text/xml");
+// //     res.send(twiml.toString());
+
+// //   } catch (err) {
+// //     console.error(err);
+// //     res.status(500).send("Error");
+// //   }
+// // }
+
+// // async function sendMenu(slug, twiml, res) {
+// //   try {
+// //     const menu = await getMenu(slug);
+
+// //     if (!menu) {
+// //       twiml.message("Restaurant not found.");
+// //     } else {
+// //       let text = `🍽 Menu\n\n`;
+
+// //       menu.forEach((item) => {
+// //         text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
+// //       });
+
+// //       text += "\nReply with item number.";
+
+// //       twiml.message(text);
+// //     }
+
+// //     res.type("text/xml");
+// //     res.send(twiml.toString());
+
+// //   } catch (err) {
+// //     console.error(err);
+// //     res.status(500).send("Error");
+// //   }
+// // }
+
+// app.post("/paystack/webhook", express.json(), async (req, res) => {
+//   const event = req.body;
+
+//   if (event.event === "charge.success") {
+//     const data = event.data;
+//     const metadata = data.metadata;
+
+//     // 🔥 GET CART BACK
+//     let cart = [];
+
+//     try {
+//       cart = JSON.parse(metadata.cart);
+//     } catch (err) {
+//       console.error("Cart parse error:", err);
+//     }
+
+//     const orderData = {
+//       userPhone: metadata.phone,
+//       restaurantId: metadata.restaurant,
+//       items: cart, // ✅ FULL ITEMS NOW
+//       total: data.amount / 100
+//     };
+
+//     const orderId = await saveOrder(orderData);
+
+//     const phone = await getRestaurantPhone(metadata.restaurant);
+
+//     // 🔥 FULL ORDER MESSAGE
+//     let msg = `📦 Paid Order!\n\n`;
+
+//     cart.forEach(item => {
+//       msg += `${item.name} – ₦${item.price}\n`;
+//     });
+
+//     msg += `\nTotal: ₦${orderData.total}`;
+//     msg += `\nCustomer: ${metadata.phone}`;
+//     msg += `\nOrder ID: ${orderId}`;
+
+//     if (phone) {
+//       await notifyRestaurant(phone, msg);
+//     }
+
+//     console.log("✅ FULL order saved:", orderId);
+//   }
+
+//   res.sendStatus(200);
+// });
 // async function sendMenu(slug, twiml, res) {
 //   try {
 //     const menu = await getMenu(slug);
@@ -514,70 +588,297 @@ async function getMenu(restaurantId) {
 //     res.status(500).send("Error");
 //   }
 // }
+// const PORT = process.env.PORT || 3000;
+// app.listen(PORT, () => console.log(`Server running on ${PORT}`));
 
-app.post("/paystack/webhook", express.json(), async (req, res) => {
-  const event = req.body;
 
-  if (event.event === "charge.success") {
-    const data = event.data;
-    const metadata = data.metadata;
 
-    // 🔥 GET CART BACK
-    let cart = [];
+require("dotenv").config();
+const express = require("express");
+const twilio = require("twilio");
+const bodyParser = require("body-parser");
+const admin = require("firebase-admin");
+const axios = require("axios");
 
-    try {
-      cart = JSON.parse(metadata.cart);
-    } catch (err) {
-      console.error("Cart parse error:", err);
-    }
+const app = express();
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(bodyParser.json());
 
-    const orderData = {
-      userPhone: metadata.phone,
-      restaurantId: metadata.restaurant,
-      items: cart, // ✅ FULL ITEMS NOW
-      total: data.amount / 100
-    };
+const sessions = {};
 
-    const orderId = await saveOrder(orderData);
+// 🔥 FIREBASE
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-    const phone = await getRestaurantPhone(metadata.restaurant);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
-    // 🔥 FULL ORDER MESSAGE
-    let msg = `📦 Paid Order!\n\n`;
+const db = admin.firestore();
 
-    cart.forEach(item => {
-      msg += `${item.name} – ₦${item.price}\n`;
+// 🔥 TWILIO
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+
+// =========================
+// 🔧 HELPERS
+// =========================
+
+const uuidRegex = /^[0-9a-fA-F-]{36}$/;
+
+async function getMenu(id) {
+  const doc = await db.collection("menus").doc(id).get();
+  if (!doc.exists) return null;
+  return doc.data().items;
+}
+
+async function getRestaurant(id) {
+  const doc = await db.collection("restaurants").doc(id).get();
+  return doc.exists ? doc.data() : null;
+}
+
+async function getRestaurantsByLocation(area) {
+  const snapshot = await db
+    .collection("restaurants")
+    .where("location", "==", area.toLowerCase())
+    .get();
+
+  const list = [];
+  snapshot.forEach(doc => {
+    list.push({ id: doc.id, ...doc.data() });
+  });
+
+  return list;
+}
+
+async function saveOrder(order) {
+  const doc = await db.collection("orders").add({
+    ...order,
+    status: "pending",
+    createdAt: new Date()
+  });
+
+  return doc.id;
+}
+
+async function notifyRestaurant(phone, message) {
+  try {
+    await client.messages.create({
+      from: "whatsapp:+14155238886",
+      to: `whatsapp:${phone}`,
+      body: message
+    });
+  } catch (err) {
+    console.error("Notify error:", err.message);
+  }
+}
+
+async function createPaymentLink(email, amount, metadata) {
+  try {
+    const res = await axios.post(
+      "https://api.paystack.co/transaction/initialize",
+      {
+        email,
+        amount: amount * 100,
+        metadata
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    return res.data.data.authorization_url;
+
+  } catch (err) {
+    console.error("Paystack Error:", err.response?.data || err.message);
+    return null;
+  }
+}
+
+async function sendMenu(id, twiml, res) {
+  const menu = await getMenu(id);
+  const restaurant = await getRestaurant(id);
+
+  if (!menu || !restaurant) {
+    twiml.message("❌ Restaurant not found.");
+  } else {
+    let text = `🍽 ${restaurant.name} Menu\n\n`;
+
+    menu.forEach(item => {
+      text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
     });
 
-    msg += `\nTotal: ₦${orderData.total}`;
-    msg += `\nCustomer: ${metadata.phone}`;
-    msg += `\nOrder ID: ${orderId}`;
+    text += "\nSend number or CHECKOUT";
 
-    if (phone) {
-      await notifyRestaurant(phone, msg);
-    }
-
-    console.log("✅ FULL order saved:", orderId);
+    twiml.message(text);
   }
 
-  res.sendStatus(200);
-});
-async function sendMenu(slug, twiml, res) {
+  res.type("text/xml");
+  res.send(twiml.toString());
+}
+
+// =========================
+// 🔥 WEBHOOK (MAIN LOGIC)
+// =========================
+
+app.post("/webhook", async (req, res) => {
+  const twiml = new twilio.twiml.MessagingResponse();
+
+  const from = req.body.From;
+  const message = req.body.Body?.trim().toLowerCase() || "";
+
+  if (!sessions[from]) {
+    sessions[from] = {
+      cart: [],
+      step: "start",
+      restaurant: null,
+      total: 0
+    };
+  }
+
+  const user = sessions[from];
+
   try {
-    const menu = await getMenu(slug);
 
-    if (!menu) {
-      twiml.message("Restaurant not found.");
-    } else {
-      let text = `🍽 Menu\n\n`;
+    // =========================
+    // 🔗 QR / LINK FLOW
+    // =========================
+    if (message.startsWith("hi")) {
+      const parts = message.split(" ");
+      const id = parts[1];
 
-      menu.forEach((item) => {
-        text += `${item.id}️⃣ ${item.name} – ₦${item.price}\n`;
-      });
+      // QR link: hi <uuid>
+      if (id && uuidRegex.test(id)) {
+        user.restaurant = id;
+        user.step = "menu";
+        user.cart = [];
 
-      text += "\nReply with item number.";
+        await sendMenu(id, twiml, res);
+        return;
+      }
 
-      twiml.message(text);
+      // normal user
+      user.step = "ask_location";
+      twiml.message("📍 Enter your area (Lekki, Yaba)");
+    }
+
+    // =========================
+    // 📍 LOCATION INPUT
+    // =========================
+    else if (user.step === "ask_location") {
+      const restaurants = await getRestaurantsByLocation(message);
+
+      if (!restaurants.length) {
+        twiml.message("❌ No restaurants found.");
+      } else {
+        user.availableRestaurants = restaurants;
+        user.step = "choose_restaurant";
+
+        let text = "🍽 Nearby Restaurants:\n\n";
+
+        restaurants.forEach((r, i) => {
+          text += `${i + 1}️⃣ ${r.name}\n`;
+        });
+
+        text += "\nReply with number";
+
+        twiml.message(text);
+      }
+    }
+
+    // =========================
+    // 🍽 SELECT RESTAURANT
+    // =========================
+    else if (user.step === "choose_restaurant") {
+      const index = Number(message) - 1;
+      const selected = user.availableRestaurants[index];
+
+      if (!selected) {
+        twiml.message("❌ Invalid choice.");
+      } else {
+        user.restaurant = selected.id;
+        user.step = "menu";
+        user.cart = [];
+
+        await sendMenu(selected.id, twiml, res);
+        return;
+      }
+    }
+
+    // =========================
+    // ➕ ADD TO CART
+    // =========================
+    else if (!isNaN(message)) {
+      if (!user.restaurant) {
+        twiml.message("⚠️ Start with 'hi'");
+      } else {
+        const menu = await getMenu(user.restaurant);
+        const item = menu?.find(i => Number(i.id) === Number(message));
+
+        if (!item) {
+          twiml.message("❌ Invalid item.");
+        } else {
+          user.cart.push(item);
+
+          twiml.message(
+            `✅ ${item.name} added\n\nSend number or CHECKOUT`
+          );
+        }
+      }
+    }
+
+    // =========================
+    // 💳 CHECKOUT (AUTO PAYMENT)
+    // =========================
+    else if (message === "checkout") {
+      if (!user.cart.length) {
+        twiml.message("🛒 Cart empty.");
+      } else {
+
+        let total = 0;
+        let summary = "🧾 Order:\n\n";
+
+        user.cart.forEach(item => {
+          summary += `${item.name} – ₦${item.price}\n`;
+          total += Number(item.price);
+        });
+
+        user.total = total;
+
+        const link = await createPaymentLink(
+          "user@email.com",
+          total,
+          {
+            phone: from,
+            restaurant: user.restaurant,
+            cart: JSON.stringify(user.cart)
+          }
+        );
+
+        twiml.message(
+          `${summary}\nTotal: ₦${total}\n\n💳 Pay:\n${link}`
+        );
+      }
+    }
+
+    // =========================
+    // 🔄 RESET
+    // =========================
+    else if (message === "reset") {
+      sessions[from] = {
+        cart: [],
+        step: "start",
+        restaurant: null,
+        total: 0
+      };
+
+      twiml.message("🔄 Reset. Send 'hi'");
+    }
+
+    else {
+      twiml.message("Send 'hi' to start");
     }
 
     res.type("text/xml");
@@ -585,8 +886,57 @@ async function sendMenu(slug, twiml, res) {
 
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error");
+    twiml.message("⚠️ Error occurred.");
+    res.type("text/xml").send(twiml.toString());
   }
-}
+});
+
+// =========================
+// 💰 PAYSTACK WEBHOOK
+// =========================
+
+app.post("/paystack/webhook", express.json(), async (req, res) => {
+  const event = req.body;
+
+  if (event.event === "charge.success") {
+    const data = event.data;
+    const meta = data.metadata;
+
+    let cart = [];
+    try {
+      cart = JSON.parse(meta.cart);
+    } catch {}
+
+    const orderId = await saveOrder({
+      userPhone: meta.phone,
+      restaurantId: meta.restaurant,
+      items: cart,
+      total: data.amount / 100
+    });
+
+    const restaurant = await getRestaurant(meta.restaurant);
+
+    let msg = `📦 Paid Order!\n\n`;
+
+    cart.forEach(i => {
+      msg += `${i.name} – ₦${i.price}\n`;
+    });
+
+    msg += `\nTotal: ₦${data.amount / 100}`;
+    msg += `\nCustomer: ${meta.phone}`;
+    msg += `\nOrder ID: ${orderId}`;
+
+    if (restaurant?.phone) {
+      await notifyRestaurant(restaurant.phone, msg);
+    }
+
+    console.log("✅ Order saved:", orderId);
+  }
+
+  res.sendStatus(200);
+});
+
+// =========================
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
