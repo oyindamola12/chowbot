@@ -638,7 +638,7 @@ async function getRestaurant(id) {
 
 async function getRestaurantsByLocation(area) {
   const snapshot = await db
-    .collection("restaurants")
+    .collection("Menus")
     .where("Area", "==", area.toLowerCase())
     .get();
 
