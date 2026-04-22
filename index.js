@@ -950,13 +950,15 @@ const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
 const axios = require("axios");
 const QRCode = require("qrcode");
+const cors = require("cors");
+
 const { v4: uuidv4 } = require("uuid");
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.static("public"));
-
+app.use(cors());
 
 const sessions = {};
 
