@@ -272,9 +272,9 @@ footer {
   <input id="phone" placeholder="WhatsApp Number">
   <input id="location" placeholder="Location">
   <input id="fee" placeholder="Delivery Fee">
-  <button onclick="register()">Register</button>
+ 
 </div>
-
+ <button onclick="register()">Register</button>
   <p id="result"></p>
 </section>
 
@@ -288,68 +288,46 @@ function scrollToSignup() {
   document.getElementById("signup").scrollIntoView({ behavior: "smooth" });
 }
 
-// async function register() {
-//   const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json"
-//     },
-//     body: JSON.stringify({
-//       name: name.value,
-//       phone: phone.value,
-//       location: location.value,
-//       deliveryFee: fee.value
-//     })
-//   });
-
-//   const data = await res.json();
-
-//   if (data.whatsappLink) {
-//     result.innerHTML = `
-//       ✅ Registered!<br>
-//       <a href="${data.whatsappLink}" target="_blank">
-//         Open Your WhatsApp Store
-//       </a>
-//     `;
-//   }
-// }
-
 
 
 async function register() {
   try {
+    const nameEl = document.getElementById("name");
+    const phoneEl = document.getElementById("phone");
+    const locationEl = document.getElementById("location");
+    const feeEl = document.getElementById("fee");
+    const resultEl = document.getElementById("result");
+
     const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        name: name.value,
-        phone: phone.value,
-        location: location.value,
-        deliveryFee: fee.value
+        name: nameEl.value,
+        phone: phoneEl.value,
+        location: locationEl.value,
+        deliveryFee: feeEl.value
       })
     });
 
-    console.log("STATUS:", res.status);
-
     const data = await res.json();
-    console.log("RESPONSE:", data);
+    console.log(data);
 
     if (data.whatsappLink) {
-      result.innerHTML = `
-        ✅ Registered!<br>
+      resultEl.innerHTML = `
+        ✅ Registered!<br><br>
         <a href="${data.whatsappLink}" target="_blank">
           Open Your WhatsApp Store
         </a>
       `;
     } else {
-      result.innerHTML = "❌ Something went wrong";
+      resultEl.innerHTML = "❌ Registration failed";
     }
 
   } catch (err) {
-    console.error("ERROR:", err);
-    result.innerHTML = "❌ Network error";
+    console.error(err);
+    document.getElementById("result").innerText = "❌ Error connecting to server";
   }
 }
 </script>
