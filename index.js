@@ -1273,46 +1273,75 @@ app.post("/webhook", async (req, res) => {
 
 
 // 🔥 REGISTER RESTAURANT
+// app.post("/register-restaurant", async (req, res) => {
+//   try {
+//     const { name, phone, location, deliveryFee } = req.body;
+
+//     if (!name || !phone || !location) {
+//       return res.status(400).json({ error: "Missing fields" });
+//     }
+
+//     const id = uuidv4();
+
+//     // ✅ SAVE RESTAURANT
+//     await db.collection("restaurants").doc(id).set({
+//       name,
+//       phone,
+//       location: location.toLowerCase(),
+//       deliveryFee: Number(deliveryFee || 0),
+//       createdAt: new Date(),
+//       active: true
+//     });
+
+//     // ✅ CREATE EMPTY MENU
+//     await db.collection("menus").doc(id).set({
+//       restaurantId: id,
+//       items: []
+//     });
+
+//     // 🔗 WHATSAPP LINK
+//     const whatsappLink = `https://wa.me/14155238886?text=hi%20${id}`;
+
+//     res.json({
+//       success: true,
+//       restaurantId: id,
+//       whatsappLink
+//     });
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
 app.post("/register-restaurant", async (req, res) => {
   try {
     const { name, phone, location, deliveryFee } = req.body;
 
-    if (!name || !phone || !location) {
-      return res.status(400).json({ error: "Missing fields" });
-    }
-
-    const id = uuidv4();
-
-    // ✅ SAVE RESTAURANT
-    await db.collection("restaurants").doc(id).set({
+    const doc = await db.collection("restaurants").add({
       name,
       phone,
       location: location.toLowerCase(),
-      deliveryFee: Number(deliveryFee || 0),
-      createdAt: new Date(),
-      active: true
+      deliveryFee: Number(deliveryFee),
+      createdAt: new Date()
     });
 
-    // ✅ CREATE EMPTY MENU
-    await db.collection("menus").doc(id).set({
-      restaurantId: id,
-      items: []
-    });
+    const restaurantId = doc.id;
 
-    // 🔗 WHATSAPP LINK
-    const whatsappLink = `https://wa.me/14155238886?text=hi%20${id}`;
+    const whatsappLink = `https://wa.me/14155238886?text=hi ${restaurantId}`;
 
     res.json({
       success: true,
-      restaurantId: id,
+      restaurantId,
       whatsappLink
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Failed to register" });
   }
 });
+
 app.post("/paystack/webhook", express.json(), async (req, res) => {
   const event = req.body;
 

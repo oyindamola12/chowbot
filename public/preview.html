@@ -288,29 +288,68 @@ function scrollToSignup() {
   document.getElementById("signup").scrollIntoView({ behavior: "smooth" });
 }
 
+// async function register() {
+//   const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json"
+//     },
+//     body: JSON.stringify({
+//       name: name.value,
+//       phone: phone.value,
+//       location: location.value,
+//       deliveryFee: fee.value
+//     })
+//   });
+
+//   const data = await res.json();
+
+//   if (data.whatsappLink) {
+//     result.innerHTML = `
+//       ✅ Registered!<br>
+//       <a href="${data.whatsappLink}" target="_blank">
+//         Open Your WhatsApp Store
+//       </a>
+//     `;
+//   }
+// }
+
+
+
 async function register() {
-  const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      name: name.value,
-      phone: phone.value,
-      location: location.value,
-      deliveryFee: fee.value
-    })
-  });
+  try {
+    const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name: name.value,
+        phone: phone.value,
+        location: location.value,
+        deliveryFee: fee.value
+      })
+    });
 
-  const data = await res.json();
+    console.log("STATUS:", res.status);
 
-  if (data.whatsappLink) {
-    result.innerHTML = `
-      ✅ Registered!<br>
-      <a href="${data.whatsappLink}" target="_blank">
-        Open Your WhatsApp Store
-      </a>
-    `;
+    const data = await res.json();
+    console.log("RESPONSE:", data);
+
+    if (data.whatsappLink) {
+      result.innerHTML = `
+        ✅ Registered!<br>
+        <a href="${data.whatsappLink}" target="_blank">
+          Open Your WhatsApp Store
+        </a>
+      `;
+    } else {
+      result.innerHTML = "❌ Something went wrong";
+    }
+
+  } catch (err) {
+    console.error("ERROR:", err);
+    result.innerHTML = "❌ Network error";
   }
 }
 </script>
