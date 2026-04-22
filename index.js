@@ -949,11 +949,12 @@ const twilio = require("twilio");
 const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
 const axios = require("axios");
-
+const QRCode = require("qrcode");
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(bodyParser.json());
+
 
 const sessions = {};
 
@@ -1306,7 +1307,51 @@ app.post("/paystack/webhook", express.json(), async (req, res) => {
   res.sendStatus(200);
 });
 
+
+
+app.get("/restaurant-qr/:id", async (req, res) => {
+  const id = req.params.id;
+
+  const link = `https://wa.me/14155238886?text=hi%20${id}`;
+
+  const qr = await QRCode.toDataURL(link);
+
+  res.send(`
+    <h2>Scan to Order</h2>
+    <img src="${qr}" />
+    <p>${link}</p>
+  `);
+});
 // =========================
 
+app.post("/add-menu-item", async (req, res) => {
+  try {
+    const { restaurantId, name, price, image } = req.body;
+
+    const docRef = db.collection("menus").doc(restaurantId);
+
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).send("Menu not found");
+    }
+
+    const items = doc.data().items || [];
+
+    items.push({
+      id: items.length + 1,
+      name,
+      price: Number(price),
+      image
+    });
+
+    await docRef.update({ items });
+
+    res.send("Menu item added ✅");
+
+  } catch (err) {
+    res.status(500).send("Error");
+  }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
