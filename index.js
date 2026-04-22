@@ -950,6 +950,7 @@ const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
 const axios = require("axios");
 const QRCode = require("qrcode");
+const { v4: uuidv4 } = require("uuid");
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -1268,6 +1269,49 @@ app.post("/webhook", async (req, res) => {
 // 💰 PAYSTACK WEBHOOK
 // =========================
 
+
+
+// 🔥 REGISTER RESTAURANT
+app.post("/register-restaurant", async (req, res) => {
+  try {
+    const { name, phone, location, deliveryFee } = req.body;
+
+    if (!name || !phone || !location) {
+      return res.status(400).json({ error: "Missing fields" });
+    }
+
+    const id = uuidv4();
+
+    // ✅ SAVE RESTAURANT
+    await db.collection("restaurants").doc(id).set({
+      name,
+      phone,
+      location: location.toLowerCase(),
+      deliveryFee: Number(deliveryFee || 0),
+      createdAt: new Date(),
+      active: true
+    });
+
+    // ✅ CREATE EMPTY MENU
+    await db.collection("menus").doc(id).set({
+      restaurantId: id,
+      items: []
+    });
+
+    // 🔗 WHATSAPP LINK
+    const whatsappLink = `https://wa.me/14155238886?text=hi%20${id}`;
+
+    res.json({
+      success: true,
+      restaurantId: id,
+      whatsappLink
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 app.post("/paystack/webhook", express.json(), async (req, res) => {
   const event = req.body;
 

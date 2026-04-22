@@ -28,7 +28,8 @@
     "firebase-admin": "^13.7.0",
     "node-fetch": "^3.3.2",
     "qrcode": "^1.5.4",
-    "twilio": "^5.12.1"
+    "twilio": "^5.12.1",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
