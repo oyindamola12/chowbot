@@ -313,15 +313,45 @@ async function register() {
 
     const data = await res.json();
     console.log(data);
+if (data.whatsappLink) {
 
-    if (data.whatsappLink) {
-      resultEl.innerHTML = `
-        ✅ Registered!<br><br>
-        <a href="${data.whatsappLink}" target="_blank">
-          Open Your WhatsApp Store
-        </a>
-      `;
-    } else {
+  const menuLink = `menu.html?id=${data.restaurantId}`;
+
+  resultEl.innerHTML = `
+    <div style="margin-top:20px;">
+      <h3>✅ Registered Successfully!</h3>
+
+      <p style="margin-top:10px;">
+        Next step: Add your menu 👇
+      </p>
+
+      <a href="${menuLink}" style="
+        display:inline-block;
+        margin-top:10px;
+        padding:12px 20px;
+        background:black;
+        color:white;
+        border-radius:25px;
+        text-decoration:none;
+      ">
+        🍽 Add Menu
+      </a>
+
+      <br><br>
+
+      <a href="${data.whatsappLink}" target="_blank" style="
+        display:inline-block;
+        padding:12px 20px;
+        background:#25D366;
+        color:white;
+        border-radius:25px;
+        text-decoration:none;
+      ">
+        💬 Open WhatsApp Store
+      </a>
+    </div>
+  `;
+} else {
       resultEl.innerHTML = "❌ Registration failed";
     }
 
