@@ -149,26 +149,6 @@ document.getElementById("id").innerText = "Restaurant ID: " + restaurantId;
 // =========================
 // LOAD EXISTING MENU
 // =========================
-async function loadMenu() {
-  try {
-    const res = await fetch(`https://chowbot-kgdk.onrender.com/menu/${restaurantId}`);
-
-    if (!res.ok) {
-      addItem(); // no menu yet
-      return;
-    }
-
-    const data = await res.json();
-
-    document.getElementById("items").innerHTML = "";
-
-    data.items.forEach(item => addItem(item));
-
-  } catch (err) {
-    console.log("No menu yet");
-    addItem();
-  }
-}
 
 // =========================
 // ADD ITEM (EDIT MODE)
@@ -267,10 +247,67 @@ async function saveMenu() {
   }
 }
 
+
+async function loadMenu() {
+  const res = await fetch(`/get-menu/${restaurantId}`);
+  const items = await res.json();
+
+  const container = document.getElementById("items");
+  container.innerHTML = "";
+
+  items.forEach(item => {
+    const div = document.createElement("div");
+
+    div.innerHTML = `
+      <input value="${item.name}" id="name-${item.id}">
+      <input value="${item.price}" id="price-${item.id}">
+      <img src="${item.image}" width="100">
+
+      <button onclick="updateItem('${item.id}')">💾 Save</button>
+      <button onclick="deleteItem('${item.id}')">🗑 Delete</button>
+    `;
+
+    container.appendChild(div);
+  });
+}
 // =========================
 // INIT
 // =========================
 loadMenu();
+
+
+async function addItem() {
+  const name = prompt("Food name");
+  const price = prompt("Price");
+
+  await fetch("/add-item", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      restaurantId,
+      name,
+      price
+    })
+  });
+
+  loadMenu();
+}
+async function deleteItem(itemId) {
+  await fetch("/delete-item", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      restaurantId,
+      itemId
+    })
+  });
+
+  loadMenu(); // refresh
+}
 </script>
 
 </body>

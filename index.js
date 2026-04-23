@@ -1400,35 +1400,7 @@ app.get("/restaurant-qr/:id", async (req, res) => {
 });
 // =========================
 
-app.post("/add-menu-item", async (req, res) => {
-  try {
-    const { restaurantId, name, price, image } = req.body;
 
-    const docRef = db.collection("menus").doc(restaurantId);
-
-    const doc = await docRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).send("Menu not found");
-    }
-
-    const items = doc.data().items || [];
-
-    items.push({
-      id: items.length + 1,
-      name,
-      price: Number(price),
-      image
-    });
-
-    await docRef.update({ items });
-
-    res.send("Menu item added ✅");
-
-  } catch (err) {
-    res.status(500).send("Error");
-  }
-});
 
 
 // =========================
@@ -1497,6 +1469,97 @@ app.get("/restaurant/:id", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+app.post("/add-item", async (req, res) => {
+  const { restaurantId, name, price, image } = req.body;
+
+  try {
+    const doc = await db
+      .collection("menus")
+      .doc(restaurantId)
+      .collection("items")
+      .add({
+        name,
+        price: Number(price),
+        image,
+        createdAt: new Date()
+      });
+
+    res.json({ success: true, id: doc.id });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to add item" });
+  }
+});
+
+
+app.get("/get-menu/:restaurantId", async (req, res) => {
+  const { restaurantId } = req.params;
+
+  try {
+    const snapshot = await db
+      .collection("menus")
+      .doc(restaurantId)
+      .collection("items")
+      .get();
+
+    const items = [];
+
+    snapshot.forEach(doc => {
+      items.push({ id: doc.id, ...doc.data() });
+    });
+
+    res.json(items);
+
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch menu" });
+  }
+});
+
+
+app.post("/update-item", async (req, res) => {
+  const { restaurantId, itemId, name, price, image } = req.body;
+
+  try {
+    await db
+      .collection("menus")
+      .doc(restaurantId)
+      .collection("items")
+      .doc(itemId)
+      .update({
+        name,
+        price: Number(price),
+        image
+      });
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Update failed" });
+  }
+});
+
+
+app.post("/delete-item", async (req, res) => {
+  const { restaurantId, itemId } = req.body;
+
+  try {
+    await db
+      .collection("menus")
+      .doc(restaurantId)
+      .collection("items")
+      .doc(itemId)
+      .delete();
+
+    res.json({ success: true });
+
+  } catch (err) {
+    res.status(500).json({ error: "Delete failed" });
   }
 });
 const PORT = process.env.PORT || 3000;
