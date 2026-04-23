@@ -1429,5 +1429,75 @@ app.post("/add-menu-item", async (req, res) => {
     res.status(500).send("Error");
   }
 });
+
+
+// =========================
+// 🍽 SAVE MENU
+// =========================
+app.post("/save-menu", async (req, res) => {
+  try {
+    const { restaurantId, items } = req.body;
+
+    if (!restaurantId || !items) {
+      return res.status(400).json({ error: "Missing data" });
+    }
+
+    await db.collection("menus").doc(restaurantId).set({
+      restaurantId,
+      items,
+      updatedAt: new Date()
+    });
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Save menu error:", err);
+    res.status(500).json({ error: "Failed to save menu" });
+  }
+});
+
+
+// =========================
+// 📥 GET MENU (FOR BOT)
+// =========================
+app.get("/menu/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const doc = await db.collection("menus").doc(id).get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: "Menu not found" });
+    }
+
+    res.json(doc.data());
+
+  } catch (err) {
+    console.error("Get menu error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+// =========================
+// 🏪 GET RESTAURANT
+// =========================
+app.get("/restaurant/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const doc = await db.collection("restaurants").doc(id).get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    res.json(doc.data());
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));

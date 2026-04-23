@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Menu</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background: #fffaf5;
+  color: #222;
+}
+
+/* NAV */
+nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 40px;
+  background: white;
+  position: sticky;
+  top: 0;
+}
+
+nav h2 {
+  color: #ff5a3c;
+}
+
+/* HEADER */
+.header {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.header h1 {
+  font-size: 32px;
+  color: #ff5a3c;
+}
+
+.header p {
+  margin-top: 10px;
+  color: #555;
+}
+
+/* CONTAINER */
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* CARD */
+.item {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.item input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+.item img {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 10px;
+}
+
+/* BUTTONS */
+.actions {
+  text-align: center;
+  margin-top: 20px;
+}
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.add-btn {
+  background: #222;
+  color: white;
+}
+
+.save-btn {
+  background: #ff5a3c;
+  color: white;
+}
+
+.delete-btn {
+  background: red;
+  color: white;
+  margin-top: 10px;
+}
+
+/* SUCCESS */
+.success {
+  text-align: center;
+  margin-top: 20px;
+  font-weight: 600;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <h2>🍽 ChowBot</h2>
+</nav>
+
+<div class="header">
+  <h1>Manage Your Menu</h1>
+  <p id="id"></p>
+</div>
+
+<div class="container">
+  <div id="items"></div>
+
+  <div class="actions">
+    <button class="add-btn" onclick="addItem()">➕ Add Item</button>
+    <button class="save-btn" onclick="saveMenu()">💾 Save Menu</button>
+  </div>
+
+  <p id="success" class="success"></p>
+</div>
+
+<script>
+const restaurantId = new URLSearchParams(window.location.search).get("id");
+
+document.getElementById("id").innerText = "Restaurant ID: " + restaurantId;
+
+// =========================
+// LOAD EXISTING MENU
+// =========================
+async function loadMenu() {
+  try {
+    const res = await fetch(`https://chowbot-kgdk.onrender.com/menu/${restaurantId}`);
+
+    if (!res.ok) {
+      addItem(); // no menu yet
+      return;
+    }
+
+    const data = await res.json();
+
+    document.getElementById("items").innerHTML = "";
+
+    data.items.forEach(item => addItem(item));
+
+  } catch (err) {
+    console.log("No menu yet");
+    addItem();
+  }
+}
+
+// =========================
+// ADD ITEM (EDIT MODE)
+// =========================
+function addItem(existing = {}) {
+  const div = document.createElement("div");
+  div.className = "item";
+
+  div.innerHTML = `
+    <input placeholder="Food name" class="name" value="${existing.name || ""}">
+    <input placeholder="Price" type="number" class="price" value="${existing.price || ""}">
+    <input placeholder="Image URL" class="image" value="${existing.image || ""}" oninput="preview(this)">
+    
+    <img class="preview" src="${existing.image || ""}" style="${existing.image ? '' : 'display:none'}"/>
+
+    <button class="delete-btn" onclick="removeItem(this)">❌ Remove</button>
+  `;
+
+  document.getElementById("items").appendChild(div);
+}
+
+// =========================
+// REMOVE ITEM
+// =========================
+function removeItem(btn) {
+  btn.parentElement.remove();
+}
+
+// =========================
+// IMAGE PREVIEW
+// =========================
+function preview(input) {
+  const img = input.parentElement.querySelector(".preview");
+
+  if (input.value) {
+    img.src = input.value;
+    img.style.display = "block";
+  } else {
+    img.style.display = "none";
+  }
+}
+
+// =========================
+// SAVE MENU
+// =========================
+async function saveMenu() {
+  const items = [];
+
+  document.querySelectorAll(".item").forEach((el, index) => {
+    const name = el.querySelector(".name").value.trim();
+    const price = el.querySelector(".price").value;
+    const image = el.querySelector(".image").value;
+
+    if (name && price) {
+      items.push({
+        id: index + 1,
+        name,
+        price: Number(price),
+        image
+      });
+    }
+  });
+
+  if (!items.length) {
+    alert("Add at least one item");
+    return;
+  }
+
+  const success = document.getElementById("success");
+  success.innerText = "⏳ Saving menu...";
+
+  try {
+    const res = await fetch("https://chowbot-kgdk.onrender.com/save-menu", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        restaurantId,
+        items
+      })
+    });
+
+    await res.json();
+
+    success.innerHTML = `
+      ✅ Menu saved!<br><br>
+      <a href="https://wa.me/14155238886?text=hi ${restaurantId}" target="_blank">
+        💬 Open Your WhatsApp Store
+      </a>
+    `;
+
+  } catch (err) {
+    console.error(err);
+    success.innerText = "❌ Failed to save menu";
+  }
+}
+
+// =========================
+// INIT
+// =========================
+loadMenu();
+</script>
+
+</body>
+</html>
