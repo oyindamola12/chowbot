@@ -298,6 +298,10 @@ async function register() {
     const feeEl = document.getElementById("fee");
     const resultEl = document.getElementById("result");
 
+      if (!nameEl || !phoneEl ||!locationEl||!feeEl) {
+    alert("⚠️ Field missing text!");
+    return;
+  }
     const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
       method: "POST",
       headers: {

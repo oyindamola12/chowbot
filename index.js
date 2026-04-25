@@ -1328,6 +1328,7 @@ app.post("/register-restaurant", async (req, res) => {
       createdAt: new Date()
     });
 
+   
     const restaurantId = doc.id;
 
     const whatsappLink = `https://wa.me/14155238886?text=hi ${restaurantId}`;
