@@ -292,10 +292,10 @@ function scrollToSignup() {
 
 async function register() {
   try {
-    const nameEl = document.getElementById("name");
-    const phoneEl = document.getElementById("phone");
-    const locationEl = document.getElementById("location");
-    const feeEl = document.getElementById("fee");
+    const nameEl = document.getElementById("name").value.trim();;
+    const phoneEl = document.getElementById("phone").value.trim();;
+    const locationEl = document.getElementById("location").value.trim();;
+    const feeEl = document.getElementById("fee").value.trim();
     const resultEl = document.getElementById("result");
 
       if (!nameEl || !phoneEl ||!locationEl||!feeEl) {
