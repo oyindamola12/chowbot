@@ -760,46 +760,26 @@ async function createPaymentLink(email, amount, metadata) {
 // =========================
 // 🔥 SEND MENU (WHATSAPP)
 // =========================
-async function sendMenuButtons(restaurantId, from) {
+async function sendMenuText(restaurantId, twiml, res) {
   const menu = await getMenu(restaurantId);
   const restaurant = await getRestaurant(restaurantId);
 
-  if (!menu.length || !restaurant) return;
+  if (!menu.length || !restaurant) {
+    twiml.message("❌ Menu not available");
+  } else {
+    let text = `🍽 ${restaurant.name}\n\n`;
 
-  const sections = [
-    {
-      title: "Menu",
-      rows: menu.map(item => ({
-        id: `item_${item.id}`,
-        title: item.name,
-        description: `₦${item.price}`
-      }))
-    },
-    {
-      title: "Checkout",
-      rows: [
-        {
-          id: "checkout",
-          title: "🧾 Checkout",
-          description: "View order"
-        }
-      ]
-    }
-  ];
+    menu.forEach((item, index) => {
+      text += `${index + 1}️⃣ ${item.name} – ₦${item.price}\n`;
+    });
 
-  await client.messages.create({
-    from: "whatsapp:+14155238886",
-    to: from,
-    body: `🍽 ${restaurant.name}`,
-    interactive: {
-      type: "list",
-      body: { text: "Select item" },
-      action: {
-        button: "View Menu",
-        sections
-      }
-    }
-  });
+    text += "\nReply with number to order\nType *checkout* to pay";
+
+    twiml.message(text);
+  }
+
+  res.type("text/xml");
+  res.send(twiml.toString());
 }
 
 // =========================
@@ -810,10 +790,6 @@ app.post("/webhook", async (req, res) => {
 
   const from = req.body.From;
   const message = req.body.Body?.trim().toLowerCase() || "";
-  const buttonId =
-    req.body.ListResponse?.id ||
-    req.body.ButtonPayload ||
-    message;
 
   if (!sessions[from]) {
     sessions[from] = {
@@ -827,23 +803,30 @@ app.post("/webhook", async (req, res) => {
   const user = sessions[from];
 
   try {
-    // START
+
+    // =========================
+    // 🟢 START / QR FLOW
+    // =========================
     if (message.startsWith("hi")) {
       const id = message.split(" ")[1];
 
+      // QR flow
       if (id) {
         user.restaurant = id;
         user.cart = [];
 
-        await sendMenuButtons(id, from);
-        return res.sendStatus(200);
+        await sendMenuText(id, twiml, res);
+        return;
       }
 
+      // normal flow
       user.step = "location";
       twiml.message("📍 Enter your area (Lekki, Yaba)");
     }
 
-    // LOCATION
+    // =========================
+    // 📍 LOCATION
+    // =========================
     else if (user.step === "location") {
       const list = await getRestaurantsByLocation(message);
 
@@ -858,11 +841,15 @@ app.post("/webhook", async (req, res) => {
           text += `${i + 1}. ${r.name}\n`;
         });
 
-        twiml.message(text + "\nReply with number");
+        text += "\nReply with number";
+
+        twiml.message(text);
       }
     }
 
-    // SELECT RESTAURANT
+    // =========================
+    // 🍽 SELECT RESTAURANT
+    // =========================
     else if (user.step === "choose") {
       const index = Number(message) - 1;
       const selected = user.available[index];
@@ -873,56 +860,90 @@ app.post("/webhook", async (req, res) => {
         user.restaurant = selected.id;
         user.cart = [];
 
-        await sendMenuButtons(selected.id, from);
-        return res.sendStatus(200);
+        await sendMenuText(selected.id, twiml, res);
+        return;
       }
     }
 
-    // ADD ITEM
-    else if (buttonId.startsWith("item_")) {
-      const itemId = buttonId.replace("item_", "");
-
-      const menu = await getMenu(user.restaurant);
-      const item = menu.find(i => i.id === itemId);
-
-      if (!item) {
-        twiml.message("❌ Item not found");
+    // =========================
+    // ➕ ADD ITEM (NUMBER INPUT)
+    // =========================
+    else if (!isNaN(message)) {
+      if (!user.restaurant) {
+        twiml.message("⚠️ Start with 'hi'");
       } else {
-        user.cart.push(item);
+        const menu = await getMenu(user.restaurant);
+        const index = Number(message) - 1;
+        const item = menu[index];
 
-        if (item.image) {
-          await client.messages.create({
-            from: "whatsapp:+14155238886",
-            to: from,
-            body: `${item.name} – ₦${item.price}`,
-            mediaUrl: [item.image]
-          });
+        if (!item) {
+          twiml.message("❌ Invalid item");
+        } else {
+          user.cart.push(item);
+
+          // ✅ Send image if available
+          if (item.image) {
+            await client.messages.create({
+              from: "whatsapp:+14155238886",
+              to: from,
+              body: `${item.name} – ₦${item.price}`,
+              mediaUrl: [item.image]
+            });
+          }
+
+          twiml.message(
+            `✅ ${item.name} added\n\nSend another number or type *checkout*`
+          );
         }
-
-        await sendMenuButtons(user.restaurant, from);
-        return res.sendStatus(200);
       }
     }
 
-    // CHECKOUT
-    else if (buttonId === "checkout") {
-      let total = 0;
-      let text = "🧾 Order:\n\n";
+    // =========================
+    // 💳 CHECKOUT
+    // =========================
+    else if (message === "checkout") {
+      if (!user.cart.length) {
+        twiml.message("🛒 Cart is empty");
+      } else {
+        let total = 0;
+        let text = "🧾 Order:\n\n";
 
-      user.cart.forEach(i => {
-        text += `${i.name} – ₦${i.price}\n`;
-        total += Number(i.price);
-      });
+        user.cart.forEach(i => {
+          text += `${i.name} – ₦${i.price}\n`;
+          total += Number(i.price);
+        });
 
-      const link = await createPaymentLink("user@email.com", total, {
-        phone: from,
-        restaurant: user.restaurant,
-        cart: JSON.stringify(user.cart)
-      });
+        user.total = total;
 
-      twiml.message(`${text}\nTotal: ₦${total}\n\n💳 Pay:\n${link}`);
+        const link = await createPaymentLink("user@email.com", total, {
+          phone: from,
+          restaurant: user.restaurant,
+          cart: JSON.stringify(user.cart)
+        });
+
+        twiml.message(
+          `${text}\nTotal: ₦${total}\n\n💳 Pay:\n${link}`
+        );
+      }
     }
 
+    // =========================
+    // 🔄 RESET
+    // =========================
+    else if (message === "reset") {
+      sessions[from] = {
+        cart: [],
+        restaurant: null,
+        step: "start",
+        total: 0
+      };
+
+      twiml.message("🔄 Reset. Send 'hi'");
+    }
+
+    // =========================
+    // ❌ DEFAULT
+    // =========================
     else {
       twiml.message("Send 'hi' to start");
     }
@@ -931,7 +952,7 @@ app.post("/webhook", async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    twiml.message("⚠️ Error");
+    twiml.message("⚠️ Error occurred");
     res.type("text/xml").send(twiml.toString());
   }
 });
