@@ -879,7 +879,18 @@ app.post("/webhook", async (req, res) => {
         if (!item) {
           twiml.message("❌ Invalid item");
         } else {
-          user.cart.push(item);
+        const existing = user.cart.find(i => i.id === item.id);
+
+if (existing) {
+  existing.qty += 1;
+} else {
+  user.cart.push({
+    id: item.id,
+    name: item.name,
+    price: item.price,
+    qty: 1
+  });
+}
 
           // ✅ Send image if available
           if (item.image) {
@@ -898,6 +909,27 @@ app.post("/webhook", async (req, res) => {
       }
     }
 
+    // =========================
+// 🗑️ REMOVE ITEM
+// =========================
+else if (message.startsWith("remove ")) {
+  const itemName = message.replace("remove ", "").trim();
+
+  const result = removeFromCart(user.cart, itemName);
+  user.cart = result.cart;
+
+  let text = result.message + "\n\n🛒 Cart:\n";
+
+  if (!user.cart.length) {
+    text += "Cart is empty";
+  } else {
+    user.cart.forEach(i => {
+      text += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`;
+    });
+  }
+
+  twiml.message(text);
+}
     // =========================
     // 💳 CHECKOUT
     // =========================
@@ -957,6 +989,29 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
+
+function removeFromCart(cart, itemName) {
+  const index = cart.findIndex(
+    i => i.name.toLowerCase() === itemName.toLowerCase()
+  );
+
+  if (index === -1) {
+    return { cart, message: "❌ Item not found in cart" };
+  }
+
+  const item = cart[index];
+
+  if (item.qty > 1) {
+    item.qty -= 1;
+  } else {
+    cart.splice(index, 1);
+  }
+
+  return {
+    cart,
+    message: `🗑️ Removed 1 ${item.name}`
+  };
+}
 // =========================
 // 🏪 REGISTER RESTAURANT
 // =========================
