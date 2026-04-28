@@ -940,10 +940,11 @@ else if (message.startsWith("remove ")) {
         let total = 0;
         let text = "🧾 Order:\n\n";
 
-        user.cart.forEach(i => {
-          text += `${i.name} – ₦${i.price}\n`;
-          total += Number(i.price);
-        });
+       user.cart.forEach(i => {
+  const subtotal = i.price * i.qty;
+  text += `${i.name} x${i.qty} – ₦${subtotal}\n`;
+  total += subtotal;
+});
 
         user.total = total;
 
