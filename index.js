@@ -1272,75 +1272,73 @@ app.post("/webhook", async (req, res) => {
 // 💰 PAYSTACK WEBHOOK
 // =========================
 
-
-
 // 🔥 REGISTER RESTAURANT
-// app.post("/register-restaurant", async (req, res) => {
-//   try {
-//     const { name, phone, location, deliveryFee } = req.body;
-
-//     if (!name || !phone || !location) {
-//       return res.status(400).json({ error: "Missing fields" });
-//     }
-
-//     const id = uuidv4();
-
-//     // ✅ SAVE RESTAURANT
-//     await db.collection("restaurants").doc(id).set({
-//       name,
-//       phone,
-//       location: location.toLowerCase(),
-//       deliveryFee: Number(deliveryFee || 0),
-//       createdAt: new Date(),
-//       active: true
-//     });
-
-//     // ✅ CREATE EMPTY MENU
-//     await db.collection("menus").doc(id).set({
-//       restaurantId: id,
-//       items: []
-//     });
-
-//     // 🔗 WHATSAPP LINK
-//     const whatsappLink = `https://wa.me/14155238886?text=hi%20${id}`;
-
-//     res.json({
-//       success: true,
-//       restaurantId: id,
-//       whatsappLink
-//     });
-
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
 app.post("/register-restaurant", async (req, res) => {
   try {
     const { name, phone, location, deliveryFee } = req.body;
 
-    const doc = await db.collection("restaurants").add({
+    if (!name || !phone || !location) {
+      return res.status(400).json({ error: "Missing fields" });
+    }
+
+    const id = uuidv4();
+
+    // ✅ SAVE RESTAURANT
+    await db.collection("restaurants").doc(id).set({
       name,
       phone,
       location: location.toLowerCase(),
-      deliveryFee: Number(deliveryFee),
-      createdAt: new Date()
+      deliveryFee: Number(deliveryFee || 0),
+      createdAt: new Date(),
+      active: true
     });
 
-   const link = `https://wa.me/14155238886?text=hi ${doc.id}`;
+    // ✅ CREATE EMPTY MENU
+    await db.collection("menus").doc(id).set({
+      restaurantId: id,
+      items: []
+    });
+
+    // 🔗 WHATSAPP LINK
+    const whatsappLink = `https://wa.me/14155238886?text=hi%20${id}`;
 
     res.json({
       success: true,
-      restaurantId,
-      whatsappLink:link
+      restaurantId: id,
+      whatsappLink
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to register" });
+    res.status(500).json({ error: "Server error" });
   }
 });
+
+// app.post("/register-restaurant", async (req, res) => {
+//   try {
+//     const { name, phone, location, deliveryFee } = req.body;
+
+//     const doc = await db.collection("restaurants").add({
+//       name,
+//       phone,
+//       location: location.toLowerCase(),
+//       deliveryFee: Number(deliveryFee),
+//       createdAt: new Date()
+//     });
+
+//    const link = `https://wa.me/14155238886?text=hi${doc.id}`;
+
+//     res.json({
+//       success: true,
+//       restaurantId,
+//       whatsappLink:link
+//     });
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Failed to register" });
+//   }
+// });
 
 app.post("/paystack/webhook", express.json(), async (req, res) => {
   const event = req.body;
@@ -1381,8 +1379,6 @@ app.post("/paystack/webhook", express.json(), async (req, res) => {
   res.sendStatus(200);
 });
 
-
-
 app.get("/restaurant-qr/:id", async (req, res) => {
   const id = req.params.id;
 
@@ -1397,9 +1393,6 @@ app.get("/restaurant-qr/:id", async (req, res) => {
   `);
 });
 // =========================
-
-
-
 
 // =========================
 // 🍽 SAVE MENU
