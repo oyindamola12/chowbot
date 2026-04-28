@@ -782,6 +782,37 @@ async function sendMenuText(restaurantId, twiml, res) {
   res.send(twiml.toString());
 }
 
+function formatCartUI(cart) {
+  if (!cart.length) {
+    return "🛒 Your cart is empty\n\nSend a number to add items 🍽";
+  }
+
+  let text = "🛒 *YOUR CART*\n";
+  text += "━━━━━━━━━━━━━━\n\n";
+
+  let total = 0;
+
+  cart.forEach((item, index) => {
+    const subtotal = item.price * item.qty;
+    total += subtotal;
+
+    text +=
+      `${index + 1}. ${item.name}\n` +
+      `   Qty: ${item.qty}\n` +
+      `   Subtotal: ₦${subtotal}\n\n`;
+  });
+
+  text += "━━━━━━━━━━━━━━\n";
+  text += `💰 *TOTAL: ₦${total}*\n\n`;
+
+  text += "🧾 Actions:\n";
+  text += "• type: remove burger\n";
+  text += "• type: checkout\n";
+  text += "• type: 1, 2, 3 to add more\n";
+
+  return text;
+}
+
 // =========================
 // 🔥 WEBHOOK (CHATBOT)
 // =========================
@@ -902,9 +933,10 @@ if (existing) {
             });
           }
 
-          twiml.message(
-            `✅ ${item.name} added\n\nSend another number or type *checkout*`
-          );
+        twiml.message(
+  `✅ Added *${item.name}*\n\n` +
+  formatCartUI(user.cart)
+);
         }
       }
     }
