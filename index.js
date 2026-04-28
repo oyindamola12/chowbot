@@ -1328,15 +1328,12 @@ app.post("/register-restaurant", async (req, res) => {
       createdAt: new Date()
     });
 
-   
-    const restaurantId = doc.id;
-
-    const whatsappLink = `https://wa.me/14155238886?text=hi ${restaurantId}`;
+   const link = `https://wa.me/14155238886?text=hi ${doc.id}`;
 
     res.json({
       success: true,
       restaurantId,
-      whatsappLink
+      whatsappLink:link
     });
 
   } catch (err) {

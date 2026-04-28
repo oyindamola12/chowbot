@@ -290,78 +290,154 @@ function scrollToSignup() {
 
 
 
+// async function register() {
+//   try {
+//     const nameEl = document.getElementById("name").value.trim();;
+//     const phoneEl = document.getElementById("phone").value.trim();;
+//     const locationEl = document.getElementById("location").value.trim();;
+//     const feeEl = document.getElementById("fee").value.trim();
+//     const resultEl = document.getElementById("result");
+
+//       if (!nameEl || !phoneEl ||!locationEl||!feeEl) {
+//     alert("⚠️ Field missing text!");
+//     return;
+//   }
+//     const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json"
+//       },
+//       body: JSON.stringify({
+//         name: nameEl.value,
+//         phone: phoneEl.value,
+//         location: locationEl.value,
+//         deliveryFee: feeEl.value
+//       })
+//     });
+
+//     const data = await res.json();
+//     console.log(data);
+
+// if (data.whatsappLink) {
+
+//   const menuLink = `menu.html?id=${data.restaurantId}`;
+
+//   resultEl.innerHTML = `
+//     <div style="margin-top:20px;">
+//       <h3>✅ Registered Successfully!</h3>
+
+//       <p style="margin-top:10px;">
+//         Next step: Add your menu 👇
+//       </p>
+
+//       <a href="${menuLink}" style="
+//         display:inline-block;
+//         margin-top:10px;
+//         padding:12px 20px;
+//         background:black;
+//         color:white;
+//         border-radius:25px;
+//         text-decoration:none;
+//       ">
+//         🍽 Add Menu
+//       </a>
+
+//       <br><br>
+
+//       <a href="${data.whatsappLink}" target="_blank" style="
+//         display:inline-block;
+//         padding:12px 20px;
+//         background:#25D366;
+//         color:white;
+//         border-radius:25px;
+//         text-decoration:none;
+//       ">
+//         💬 Open WhatsApp Store
+//       </a>
+//     </div>
+//   `;
+// } else {
+//       resultEl.innerHTML = "❌ Registration failed";
+//     }
+
+//   } catch (err) {
+//     console.error(err);
+//     document.getElementById("result").innerText = "❌ Error connecting to server";
+//   }
+// }
+
+
 async function register() {
   try {
-    const nameEl = document.getElementById("name").value.trim();;
-    const phoneEl = document.getElementById("phone").value.trim();;
-    const locationEl = document.getElementById("location").value.trim();;
-    const feeEl = document.getElementById("fee").value.trim();
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const location = document.getElementById("location").value.trim();
+    const fee = document.getElementById("fee").value.trim();
     const resultEl = document.getElementById("result");
 
-      if (!nameEl || !phoneEl ||!locationEl||!feeEl) {
-    alert("⚠️ Field missing text!");
-    return;
-  }
+    if (!name || !phone || !location || !fee) {
+      alert("⚠️ All fields are required!");
+      return;
+    }
+
     const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        name: nameEl.value,
-        phone: phoneEl.value,
-        location: locationEl.value,
-        deliveryFee: feeEl.value
+        name,
+        phone,
+        location,
+        deliveryFee: fee
       })
     });
 
     const data = await res.json();
     console.log(data);
-if (data.whatsappLink) {
 
-  const menuLink = `menu.html?id=${data.restaurantId}`;
+    if (data.success) {
+      const menuLink = `menu.html?id=${data.restaurantId}`;
 
-  resultEl.innerHTML = `
-    <div style="margin-top:20px;">
-      <h3>✅ Registered Successfully!</h3>
+      resultEl.innerHTML = `
+        <div style="margin-top:20px;">
+          <h3>✅ Registered Successfully!</h3>
 
-      <p style="margin-top:10px;">
-        Next step: Add your menu 👇
-      </p>
+          <p>Add your menu 👇</p>
 
-      <a href="${menuLink}" style="
-        display:inline-block;
-        margin-top:10px;
-        padding:12px 20px;
-        background:black;
-        color:white;
-        border-radius:25px;
-        text-decoration:none;
-      ">
-        🍽 Add Menu
-      </a>
+          <a href="${menuLink}" style="
+            display:inline-block;
+            margin-top:10px;
+            padding:12px 20px;
+            background:black;
+            color:white;
+            border-radius:25px;
+            text-decoration:none;
+          ">
+            🍽 Add Menu
+          </a>
 
-      <br><br>
-
-      <a href="${data.whatsappLink}" target="_blank" style="
-        display:inline-block;
-        padding:12px 20px;
-        background:#25D366;
-        color:white;
-        border-radius:25px;
-        text-decoration:none;
-      ">
-        💬 Open WhatsApp Store
-      </a>
-    </div>
-  `;
-} else {
-      resultEl.innerHTML = "❌ Registration failed";
+          ${data.whatsappLink ? `
+          <br><br>
+          <a href="${data.whatsappLink}" target="_blank" style="
+            display:inline-block;
+            padding:12px 20px;
+            background:#25D366;
+            color:white;
+            border-radius:25px;
+          ">
+            💬 Open WhatsApp Store
+          </a>
+          ` : ""}
+        </div>
+      `;
+    } else {
+      resultEl.innerHTML = `❌ ${data.message || "Registration failed"}`;
     }
 
   } catch (err) {
     console.error(err);
-    document.getElementById("result").innerText = "❌ Error connecting to server";
+    document.getElementById("result").innerText = "❌ Server error";
   }
 }
 </script>
