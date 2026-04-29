@@ -2367,55 +2367,99 @@ app.post("/webhook", async (req, res) => {
     }
 
     // CHECKOUT (FIXED ORDER DELIVERY)
-    else if (message === "checkout") {
-      if (!user.cart.length) {
-        return twiml.message("🛒 Cart empty");
-      }
+//     else if (message === "checkout") {
+//       if (!user.cart.length) {
+//         return twiml.message("🛒 Cart empty");
+//       }
 
-      let cartTotal = 0;
+//       let cartTotal = 0;
 
-      user.cart.forEach((i) => {
-        cartTotal += i.price * i.qty;
-      });
+//       user.cart.forEach((i) => {
+//         cartTotal += i.price * i.qty;
+//       });
 
-      const pricing = calculatePricing(cartTotal);
+//       const pricing = calculatePricing(cartTotal);
 
-      const link = await createPaymentLink(
-        "user@email.com",
-        pricing.customerPays,
-        {
-          phone: from,
-          restaurant: user.restaurant,
-          cart: JSON.stringify(user.cart),
-          cartTotal,
-        }
-      );
+//       const link = await createPaymentLink(
+//         "user@email.com",
+//         pricing.customerPays,
+//         {
+//           phone: from,
+//           restaurant: user.restaurant,
+//           cart: JSON.stringify(user.cart),
+//           cartTotal,
+//         }
+//       );
 
-      // ✅ FIX: ALWAYS SEND ORDER TO RESTAURANT HERE (NO FLOW CHANGE)
-      const restaurant = await getRestaurant(user.restaurant);
+//       // ✅ FIX: ALWAYS SEND ORDER TO RESTAURANT HERE (NO FLOW CHANGE)
+//       const restaurant = await getRestaurant(user.restaurant);
 
-      if (restaurant?.phone) {
-        let orderMsg = `📦 NEW ORDER\n\n`;
+//       if (restaurant?.phone) {
+//         let orderMsg = `📦 NEW ORDER\n\n`;
 
-        user.cart.forEach((i) => {
-          orderMsg += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`;
-        });
+//         user.cart.forEach((i) => {
+//           orderMsg += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`;
+//         });
 
-        orderMsg += `
-━━━━━━━━━━━━━━
-💰 Total: ₦${cartTotal}
-🚚 Fee: ₦${pricing.serviceFee}
-🧾 Commission: ₦${pricing.commission}
-`;
+//         orderMsg += `
+// ━━━━━━━━━━━━━━
+// 💰 Total: ₦${cartTotal}
+// 🚚 Fee: ₦${pricing.serviceFee}
+// 🧾 Commission: ₦${pricing.commission}
+// `;
 
-        await notifyRestaurant(restaurant.phone, orderMsg);
-      }
+//         await notifyRestaurant(restaurant.phone, orderMsg);
+//       }
 
-      twiml.message(
-        `🧾 ORDER\n\n${formatCartUI(user.cart)}\n\n💳 Pay:\n${link}`
-      );
+//       twiml.message(
+//         `🧾 ORDER\n\n${formatCartUI(user.cart)}\n\n💳 Pay:\n${link}`
+//       );
+//     }
+
+else if (message === "checkout") {
+  if (!user.cart.length) {
+    return twiml.message("🛒 Cart empty");
+  }
+
+  let cartTotal = 0;
+
+  user.cart.forEach((i) => {
+    cartTotal += i.price * i.qty;
+  });
+
+  const pricing = calculatePricing(cartTotal);
+
+  // create pending order ID
+  const orderId = uuidv4();
+
+  // store pending order in Firebase (IMPORTANT FIX)
+  await db.collection("pendingOrders").doc(orderId).set({
+    phone: from,
+    restaurant: user.restaurant,
+    cart: user.cart,
+    cartTotal,
+    status: "pending_payment",
+    createdAt: new Date()
+  });
+
+  const link = await createPaymentLink(
+    "user@email.com",
+    pricing.customerPays,
+    {
+      orderId,
+      phone: from,
+      restaurant: user.restaurant
     }
+  );
 
+  twiml.message(
+    `🧾 ORDER SUMMARY\n\n` +
+      `${formatCartUI(user.cart)}\n\n` +
+      `🚚 Fee: ₦${pricing.serviceFee}\n` +
+      `💰 Total: ₦${pricing.customerPays}\n\n` +
+      `💳 Pay here:\n${link}`
+  );
+}
     // RESET
     else if (message === "reset") {
       sessions[from] = {};
@@ -2435,5 +2479,72 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
+
+app.post("/paystack/webhook", async (req, res) => {
+  const data = req.body.data;
+  const metadata = data.metadata;
+
+  try {
+    const orderId = metadata.orderId;
+
+    // get pending order
+    const orderRef = db.collection("pendingOrders").doc(orderId);
+    const orderSnap = await orderRef.get();
+
+    if (!orderSnap.exists) {
+      return res.sendStatus(200);
+    }
+
+    const order = orderSnap.data();
+
+    const restaurant = await getRestaurant(order.restaurant);
+
+    const cartTotal = order.cart.reduce(
+      (sum, i) => sum + i.price * i.qty,
+      0
+    );
+
+    const pricing = calculatePricing(cartTotal);
+
+    // =========================
+    // SAVE FINAL ORDER
+    // =========================
+    await saveOrder({
+      userPhone: order.phone,
+      restaurantId: order.restaurant,
+      items: order.cart,
+      total: cartTotal,
+      paymentStatus: "paid"
+    });
+
+    // =========================
+    // SEND TO RESTAURANT ONLY NOW
+    // =========================
+    if (restaurant?.phone) {
+      let msg = `📦 NEW PAID ORDER\n\n`;
+
+      order.cart.forEach(i => {
+        msg += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`;
+      });
+
+      msg += `
+━━━━━━━━━━━━━━
+💰 Total: ₦${cartTotal}
+💸 Earnings: ₦${pricing.restaurantEarnings}
+🧾 Commission: ₦${pricing.commission}
+`;
+
+      await notifyRestaurant(restaurant.phone, msg);
+    }
+
+    // mark as completed
+    await orderRef.update({ status: "paid" });
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
+  }
+});
 // =========================
 app.listen(3000, () => console.log("🚀 Server running"));
