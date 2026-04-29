@@ -1901,9 +1901,11 @@ app.post("/webhook", async (req, res) => {
         if (existing) existing.qty++;
         else user.cart.push({ ...item, qty: 1 });
       });
-
-    twiml.message(
-  `✅ Added ${item.name}\n\n` + formatCartUI(user.cart)
+twiml.message(
+  `✅ Added:\n• ${numbers
+    .map((n) => menu[n - 1]?.name)
+    .filter(Boolean)
+    .join("\n• ")}\n\n` + formatCartUI(user.cart)
 );
     }
 
