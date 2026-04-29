@@ -1898,20 +1898,50 @@ app.post("/webhook", async (req, res) => {
         else user.cart.push({ ...item, qty: 1 });
       });
 
-      twiml.message("✅ Added\n\n" + formatCartUI(user.cart));
+twiml.message(
+  `✅ Added ${item.name}\n\n` + formatCartUI(user.cart)
+);
     }
 
     // =========================
     // REMOVE
     // =========================
+    // else if (message.startsWith("remove ")) {
+    //   const name = message.replace("remove ", "");
+
+    //   user.cart = user.cart.filter((i) => i.name !== name);
+
+    //   twiml.message("🗑 Removed\n\n" + formatCartUI(user.cart));
+    // }
+
+
     else if (message.startsWith("remove ")) {
-      const name = message.replace("remove ", "");
+  const itemName = message.replace("remove ", "").trim().toLowerCase();
 
-      user.cart = user.cart.filter((i) => i.name !== name);
+  const index = user.cart.findIndex((i) =>
+    i.name.toLowerCase().includes(itemName)
+  );
 
-      twiml.message("🗑 Removed\n\n" + formatCartUI(user.cart));
+  if (index === -1) {
+    twiml.message(`❌ Item not found: "${itemName}"`);
+  } else {
+    const removed = user.cart[index];
+
+    if (removed.qty > 1) {
+      removed.qty -= 1;
+      twiml.message(
+        `➖ Removed 1 ${removed.name}\n\n` +
+        formatCartUI(user.cart)
+      );
+    } else {
+      user.cart.splice(index, 1);
+      twiml.message(
+        `🗑️ Removed ${removed.name}\n\n` +
+        formatCartUI(user.cart)
+      );
     }
-
+  }
+}
     // =========================
     // CHECKOUT
     // =========================
