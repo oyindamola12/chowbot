@@ -2441,16 +2441,16 @@ else if (message === "checkout") {
     status: "pending_payment",
     createdAt: new Date()
   });
-
-  const link = await createPaymentLink(
-    "user@email.com",
-    pricing.customerPays,
-    {
-      orderId,
-      phone: from,
-      restaurant: user.restaurant
-    }
-  );
+const link = await createPaymentLink(
+  "user@email.com",
+  pricing.customerPays,
+  {
+    orderId: orderId.toString(),
+    phone: from,
+    restaurant: user.restaurant,
+    cart: JSON.stringify(user.cart)
+  }
+);
 
   twiml.message(
     `🧾 ORDER SUMMARY\n\n` +
@@ -2481,17 +2481,39 @@ else if (message === "checkout") {
 
 
 app.post("/paystack/webhook", async (req, res) => {
-  const data = req.body.data;
-  const metadata = data.metadata;
-
   try {
+    const secret = process.env.PAYSTACK_SECRET;
+
+    // OPTIONAL BUT IMPORTANT: verify signature
+    const hash = require("crypto")
+      .createHmac("sha512", secret)
+      .update(JSON.stringify(req.body))
+      .digest("hex");
+
+    if (hash !== req.headers["x-paystack-signature"]) {
+      return res.sendStatus(401);
+    }
+
+    const event = req.body;
+
+    if (event.event !== "charge.success") {
+      return res.sendStatus(200);
+    }
+
+    const metadata = event.data.metadata;
+
+    if (!metadata?.orderId) {
+      return res.sendStatus(200);
+    }
+
     const orderId = metadata.orderId;
 
-    // get pending order
+    // GET PENDING ORDER
     const orderRef = db.collection("pendingOrders").doc(orderId);
     const orderSnap = await orderRef.get();
 
     if (!orderSnap.exists) {
+      console.log("Order not found:", orderId);
       return res.sendStatus(200);
     }
 
@@ -2506,9 +2528,7 @@ app.post("/paystack/webhook", async (req, res) => {
 
     const pricing = calculatePricing(cartTotal);
 
-    // =========================
     // SAVE FINAL ORDER
-    // =========================
     await saveOrder({
       userPhone: order.phone,
       restaurantId: order.restaurant,
@@ -2517,11 +2537,9 @@ app.post("/paystack/webhook", async (req, res) => {
       paymentStatus: "paid"
     });
 
-    // =========================
-    // SEND TO RESTAURANT ONLY NOW
-    // =========================
+    // SEND TO RESTAURANT
     if (restaurant?.phone) {
-      let msg = `📦 NEW PAID ORDER\n\n`;
+      let msg = `📦 *NEW PAID ORDER*\n\n`;
 
       order.cart.forEach(i => {
         msg += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`;
@@ -2537,13 +2555,14 @@ app.post("/paystack/webhook", async (req, res) => {
       await notifyRestaurant(restaurant.phone, msg);
     }
 
-    // mark as completed
+    // mark done
     await orderRef.update({ status: "paid" });
 
-    res.sendStatus(200);
+    return res.sendStatus(200);
+
   } catch (err) {
-    console.log(err);
-    res.sendStatus(500);
+    console.log("Webhook error:", err);
+    return res.sendStatus(500);
   }
 });
 // =========================
