@@ -1276,7 +1276,6 @@
 
 
 
-
 require("dotenv").config();
 const express = require("express");
 const twilio = require("twilio");
@@ -1421,9 +1420,9 @@ async function createPaymentLink(email, amount, metadata) {
 // 🛒 CART UI
 // =========================
 function formatCartUI(cart) {
-  if (!cart?.length) return "🛒 Cart is empty";
+  if (!cart?.length) return "🛒 *Cart is empty*";
 
-  let text = "🛒 YOUR CART\n━━━━━━━━━━━━\n\n";
+  let text = "🛒 *YOUR CART*\n━━━━━━━━━━━━\n\n";
   let total = 0;
 
   cart.forEach((i, index) => {
@@ -1433,7 +1432,12 @@ function formatCartUI(cart) {
     text += `${index + 1}. ${i.name}\nQty: ${i.qty}\n₦${subtotal}\n\n`;
   });
 
-  text += `━━━━━━━━━━━━\nTOTAL: ₦${total}`;
+  text += `━━━━━━━━━━━━\n💰 *TOTAL: ₦${total}*\n\n`;
+
+  text += "🧾 Actions:\n";
+  text += "• type: remove item name\n";
+  text += "• type: 1, 2, 3 to add more\n";
+  text += "• type: checkout\n";
 
   return text;
 }
@@ -1542,7 +1546,7 @@ app.post("/webhook", async (req, res) => {
         else user.cart.push({ ...item, qty: 1 });
       });
 
-      twiml.message("✅ Added\n\n" + formatCartUI(user.cart));
+      twiml.message(`✅ Added *${item.name}*\n\n`  + formatCartUI(user.cart));
     }
 
     // =========================
