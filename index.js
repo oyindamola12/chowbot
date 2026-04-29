@@ -925,48 +925,103 @@ app.post("/webhook", async (req, res) => {
     // =========================
     // ➕ ADD ITEM (NUMBER INPUT)
     // =========================
-    else if (!isNaN(message)) {
-      if (!user.restaurant) {
-        twiml.message("⚠️ Start with 'hi'");
-      } else {
-        const menu = await getMenu(user.restaurant);
-        const index = Number(message) - 1;
-        const item = menu[index];
+//     else if (!isNaN(message)) {
+//       if (!user.restaurant) {
+//         twiml.message("⚠️ Start with 'hi'");
+//       } else {
+//         const menu = await getMenu(user.restaurant);
+//         const index = Number(message) - 1;
+//         const item = menu[index];
 
-        if (!item) {
-          twiml.message("❌ Invalid item");
-        } else {
-        const existing = user.cart.find(i => i.id === item.id);
+//         if (!item) {
+//           twiml.message("❌ Invalid item");
+//         } else {
+//         const existing = user.cart.find(i => i.id === item.id);
 
-if (existing) {
-  existing.qty += 1;
-} else {
-  user.cart.push({
-    id: item.id,
-    name: item.name,
-    price: item.price,
-    qty: 1
-  });
-}
+// if (existing) {
+//   existing.qty += 1;
+// } else {
+//   user.cart.push({
+//     id: item.id,
+//     name: item.name,
+//     price: item.price,
+//     qty: 1
+//   });
+// }
 
-          // ✅ Send image if available
-          if (item.image) {
-            await client.messages.create({
-              from: "whatsapp:+14155238886",
-              to: from,
-              body: `${item.name} – ₦${item.price}`,
-              mediaUrl: [item.image]
-            });
-          }
+//           // ✅ Send image if available
+//           if (item.image) {
+//             await client.messages.create({
+//               from: "whatsapp:+14155238886",
+//               to: from,
+//               body: `${item.name} – ₦${item.price}`,
+//               mediaUrl: [item.image]
+//             });
+//           }
 
-        twiml.message(
-  `✅ Added *${item.name}*\n\n` +
-  formatCartUI(user.cart)
-);
-        }
-      }
+//         twiml.message(
+//   `✅ Added *${item.name}*\n\n` +
+//   formatCartUI(user.cart)
+// );
+//         }
+//       }
+//     }
+
+
+else if (/^[\d,\s]+$/.test(message)) {
+  if (!user.restaurant) {
+    twiml.message("⚠️ Start with 'hi'");
+  } else {
+    const menu = await getMenu(user.restaurant);
+
+    const numbers = parseMultipleItems(message);
+
+    if (!numbers.length) {
+      twiml.message("❌ No valid items found");
+      return;
     }
 
+    let addedItems = [];
+
+    numbers.forEach(num => {
+      const index = num - 1;
+      const item = menu[index];
+
+      if (item) {
+        const existing = user.cart.find(i => i.id === item.id);
+
+        if (existing) {
+          existing.qty += 1;
+        } else {
+          user.cart.push({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            qty: 1
+          });
+        }
+
+        addedItems.push(item.name);
+      }
+    });
+
+    // optional image send (first item only to avoid spam)
+    const first = menu[numbers[0] - 1];
+    if (first?.image) {
+      await client.messages.create({
+        from: "whatsapp:+14155238886",
+        to: from,
+        body: `${first.name} – ₦${first.price}`,
+        mediaUrl: [first.image]
+      });
+    }
+
+    twiml.message(
+      `✅ Added:\n• ${addedItems.join("\n• ")}\n\n` +
+      formatCartUI(user.cart)
+    );
+  }
+}
     // =========================
 // 🗑️ REMOVE ITEM
 // =========================
