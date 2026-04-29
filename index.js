@@ -1951,32 +1951,88 @@ twiml.message(
     // =========================
     // CHECKOUT
     // =========================
+    // else if (message === "checkout") {
+    //   if (!user.cart.length) {
+    //     return twiml.message("🛒 Cart empty");
+    //   }
+
+    //   let cartTotal = 0;
+
+    //   user.cart.forEach((i) => {
+    //     cartTotal += i.price * i.qty;
+    //   });
+
+    //   const pricing = calculatePricing(cartTotal);
+
+    //   const link = await createPaymentLink("user@email.com", pricing.customerPays, {
+    //     phone: from,
+    //     restaurant: user.restaurant,
+    //     cart: JSON.stringify(user.cart),
+    //   });
+
+    //   twiml.message(
+    //     `🧾 ORDER\n\n${formatCartUI(user.cart)}\n\n` +
+    //       `🚚 Fee: ₦${pricing.serviceFee}\n` +
+    //       `💰 Total: ₦${pricing.customerPays}\n\n💳 Pay:\n${link}`
+    //   );
+    // }
+
     else if (message === "checkout") {
-      if (!user.cart.length) {
-        return twiml.message("🛒 Cart empty");
-      }
+  if (!user.cart.length) {
+    return twiml.message("🛒 Cart empty");
+  }
 
-      let cartTotal = 0;
+  let cartTotal = 0;
 
-      user.cart.forEach((i) => {
-        cartTotal += i.price * i.qty;
-      });
+  user.cart.forEach((i) => {
+    cartTotal += i.price * i.qty;
+  });
 
-      const pricing = calculatePricing(cartTotal);
+  const pricing = calculatePricing(cartTotal);
 
-      const link = await createPaymentLink("user@email.com", pricing.customerPays, {
-        phone: from,
-        restaurant: user.restaurant,
-        cart: JSON.stringify(user.cart),
-      });
-
-      twiml.message(
-        `🧾 ORDER\n\n${formatCartUI(user.cart)}\n\n` +
-          `🚚 Fee: ₦${pricing.serviceFee}\n` +
-          `💰 Total: ₦${pricing.customerPays}\n\n💳 Pay:\n${link}`
-      );
+  // ✅ CREATE PAYMENT LINK
+  const link = await createPaymentLink(
+    "user@email.com",
+    pricing.customerPays,
+    {
+      phone: from,
+      restaurant: user.restaurant,
+      cart: JSON.stringify(user.cart),
+      cartTotal
     }
+  );
 
+  // =========================
+  // 🏪 SEND ORDER TO RESTAURANT (FIX)
+  // =========================
+  const restaurant = await getRestaurant(user.restaurant);
+
+  if (restaurant?.phone) {
+    let orderMsg = `📦 NEW ORDER\n\n`;
+
+    user.cart.forEach(i => {
+      orderMsg += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`;
+    });
+
+    orderMsg += `
+━━━━━━━━━━━━━━
+💰 Total: ₦${cartTotal}
+🚚 Service Fee: ₦${pricing.serviceFee}
+🧾 Commission: ₦${pricing.commission}
+`;
+
+    await notifyRestaurant(restaurant.phone, orderMsg);
+  }
+
+  // =========================
+  // 👤 CUSTOMER MESSAGE
+  // =========================
+  twiml.message(
+    `🧾 ORDER\n\n${formatCartUI(user.cart)}\n\n` +
+      `🚚 Fee: ₦${pricing.serviceFee}\n` +
+      `💰 Total: ₦${pricing.customerPays}\n\n💳 Pay:\n${link}`
+  );
+}
     // =========================
     // RESET
     // =========================
