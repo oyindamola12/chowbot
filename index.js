@@ -630,7 +630,6 @@
 // app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
 
 
-
 require("dotenv").config();
 const express = require("express");
 const twilio = require("twilio");
@@ -992,29 +991,61 @@ else if (message.startsWith("remove ")) {
     // =========================
     // 💳 CHECKOUT
     // =========================
-    else if (message === "checkout") {
-      if (!user.cart.length) {
-        twiml.message("🛒 Cart is empty");
-      } else {
-         let cartTotal = 0;
-        let text = "🧾 Order:\n\n";
+//     else if (message === "checkout") {
+//       if (!user.cart.length) {
+//         twiml.message("🛒 Cart is empty");
+//       } else {
+//          let cartTotal = 0;
+//         let text = "🧾 Order:\n\n";
 
-       user.cart.forEach(i => {
-  const subtotal = i.price * i.qty;
-  text += `${i.name} x${i.qty} – ₦${subtotal}\n`;
-  total += subtotal;
-});
-const pricing = calculatePricing(cartTotal);
-        // user.total = total;
+//        user.cart.forEach(i => {
+//   const subtotal = i.price * i.qty;
+//   text += `${i.name} x${i.qty} – ₦${subtotal}\n`;
+//   cartTotal += subtotal;
+// });
+// const pricing = calculatePricing(cartTotal);
+//         // user.total = total;
 
-        const link = await createPaymentLink("user@email.com", total, {
-          phone: from,
-          restaurant: user.restaurant,
-          cart: JSON.stringify(user.cart)
-        });
+//         const link = await createPaymentLink("user@email.com", pricing.customerPays, {
+//           phone: from,
+//           restaurant: user.restaurant,
+//           cart: JSON.stringify(user.cart)
+//         });
 
-        twiml.message(
-    `${text}
+//         twiml.message(
+// `${text}
+// 🍽 Food: ₦${cartTotal}
+// 🚚 Service Fee: ₦${pricing.serviceFee}
+// 💰 Total: ₦${pricing.customerPays}
+// 💳 Pay:
+// ${link}`
+//         );
+//       }
+//     }
+
+else if (message === "checkout") {
+  if (!user.cart.length) {
+    twiml.message("🛒 Cart is empty");
+  } else {
+    let cartTotal = 0;
+    let text = "🧾 Order:\n\n";
+
+    user.cart.forEach(i => {
+      const subtotal = i.price * i.qty;
+      text += `${i.name} x${i.qty} – ₦${subtotal}\n`;
+      cartTotal += subtotal;
+    });
+
+    const pricing = calculatePricing(cartTotal);
+
+    const link = await createPaymentLink("user@email.com", pricing.customerPays, {
+      phone: from,
+      restaurant: user.restaurant,
+      cart: JSON.stringify(user.cart)
+    });
+
+    twiml.message(
+`${text}
 
 🍽 Food: ₦${cartTotal}
 🚚 Service Fee: ₦${pricing.serviceFee}
@@ -1023,10 +1054,9 @@ const pricing = calculatePricing(cartTotal);
 
 💳 Pay:
 ${link}`
-        );
-      }
-    }
-
+    );
+  }
+}
     // =========================
     // 🔄 RESET
     // =========================
