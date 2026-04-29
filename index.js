@@ -1765,6 +1765,10 @@ function formatCartUI(cart) {
   });
 
   text += `━━━━━━━━━━━━━━\n💰 Total: ₦${total}`;
+  text += "🧾 Actions:\n";
+  text += "• type: remove burger\n";
+  text += "• type: checkout\n";
+  text += "• type: 1, 2, 3 to add more\n";
   return text;
 }
 
@@ -1898,7 +1902,7 @@ app.post("/webhook", async (req, res) => {
         else user.cart.push({ ...item, qty: 1 });
       });
 
-twiml.message(
+    twiml.message(
   `✅ Added ${item.name}\n\n` + formatCartUI(user.cart)
 );
     }
