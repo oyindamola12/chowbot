@@ -864,23 +864,44 @@ app.post("/webhook", async (req, res) => {
     // =========================
     // 🟢 START / QR FLOW
     // =========================
+    // if (message.startsWith("hi")) {
+    //   const id = message.split(" ")[1];
+
+    //   // QR flow
+    //   if (id) {
+    //     user.restaurant = id;
+    //     user.cart = [];
+
+    //     await sendMenuText(id, twiml, res);
+    //     return;
+    //   }
+
+    //   // normal flow
+    //   user.step = "location";
+    //   twiml.message("📍 Enter your area (Lekki, Yaba)");
+    // }
+
     if (message.startsWith("hi")) {
-      const id = message.split(" ")[1];
+  const parts = message.split(" ");
+  const id = parts[1];
 
-      // QR flow
-      if (id) {
-        user.restaurant = id;
-        user.cart = [];
+  // QR FLOW
+  if (id) {
+    user.restaurant = id;
+    user.cart = [];
+    user.step = "menu";
 
-        await sendMenuText(id, twiml, res);
-        return;
-      }
+    await sendMenuText(id, twiml, res);
+    return;
+  }
 
-      // normal flow
-      user.step = "location";
-      twiml.message("📍 Enter your area (Lekki, Yaba)");
-    }
+  // NORMAL FLOW
+  user.step = "location";
 
+  twiml.message(
+    "👋 Welcome!\n\n📍 Please enter your area:\n(e.g Lekki, Yaba)"
+  );
+}
     // =========================
     // 📍 LOCATION
     // =========================
@@ -970,7 +991,12 @@ app.post("/webhook", async (req, res) => {
 
 else if (/^[\d,\s]+$/.test(message)) {
   if (!user.restaurant) {
-    twiml.message("⚠️ Start with 'hi'");
+    twiml.message(
+    "⚠️ No restaurant selected yet.\n\n" +
+    "👉 Type *hi* to start\n" +
+    "OR scan a restaurant QR code"
+  );
+  return;
   } else {
     const menu = await getMenu(user.restaurant);
 
