@@ -2481,24 +2481,57 @@ const link = await createPaymentLink(
 
 
 app.post("/paystack/webhook", async (req, res) => {
-  const data = req.body.data;
-  const metadata = data.metadata;
-
   try {
+    console.log("🔥 PAYSTACK HIT");
+
+    const event = req.body;
+
+    console.log("EVENT TYPE:", event.event);
+
+    // ✅ ONLY process successful payments
+    if (event.event !== "charge.success") {
+      return res.sendStatus(200);
+    }
+
+    const data = event.data;
+    const metadata = data.metadata;
+
+    if (!metadata || !metadata.orderId) {
+      console.log("❌ Missing metadata");
+      return res.sendStatus(200);
+    }
+
     const orderId = metadata.orderId;
 
-    // get pending order
+    console.log("ORDER ID:", orderId);
+
+    // =========================
+    // GET PENDING ORDER
+    // =========================
     const orderRef = db.collection("pendingOrders").doc(orderId);
     const orderSnap = await orderRef.get();
 
     if (!orderSnap.exists) {
+      console.log("❌ Order not found in DB");
       return res.sendStatus(200);
     }
 
     const order = orderSnap.data();
 
+    console.log("✅ ORDER FOUND:", order);
+
     const restaurant = await getRestaurant(order.restaurant);
 
+    if (!restaurant) {
+      console.log("❌ Restaurant not found");
+      return res.sendStatus(200);
+    }
+
+    console.log("📞 Restaurant phone:", restaurant.phone);
+
+    // =========================
+    // CALCULATE TOTAL
+    // =========================
     const cartTotal = order.cart.reduce(
       (sum, i) => sum + i.price * i.qty,
       0
@@ -2509,42 +2542,55 @@ app.post("/paystack/webhook", async (req, res) => {
     // =========================
     // SAVE FINAL ORDER
     // =========================
-    await saveOrder({
-      userPhone: order.phone,
-      restaurantId: order.restaurant,
-      items: order.cart,
-      total: cartTotal,
-      paymentStatus: "paid"
+    await db.collection("orders").add({
+      ...order,
+      paymentStatus: "paid",
+      createdAt: new Date()
     });
 
     // =========================
-    // SEND TO RESTAURANT ONLY NOW
+    // FORMAT MESSAGE
     // =========================
-    if (restaurant?.phone) {
-      let msg = `📦 NEW PAID ORDER\n\n`;
+    let msg = `📦 NEW PAID ORDER\n\n`;
 
-      order.cart.forEach(i => {
-        msg += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`;
-      });
+    order.cart.forEach(i => {
+      msg += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`;
+    });
 
-      msg += `
+    msg += `
 ━━━━━━━━━━━━━━
 💰 Total: ₦${cartTotal}
 💸 Earnings: ₦${pricing.restaurantEarnings}
 🧾 Commission: ₦${pricing.commission}
+Customer: ${order.phone}
 `;
 
-      await notifyRestaurant(restaurant.phone, msg);
+    // =========================
+    // SEND TO RESTAURANT
+    // =========================
+    try {
+      await client.messages.create({
+        from: "whatsapp:+14155238886",
+        to: `whatsapp:${restaurant.phone}`, // ⚠️ MUST be +234...
+        body: msg,
+      });
+
+      console.log("✅ MESSAGE SENT TO RESTAURANT");
+
+    } catch (err) {
+      console.log("❌ TWILIO ERROR:", err.message);
     }
 
-    // mark as completed
+    // =========================
+    // UPDATE STATUS
+    // =========================
     await orderRef.update({ status: "paid" });
 
     res.sendStatus(200);
-    console.log("PAYSTACK EVENT:", JSON.stringify(req.body, null, 2));
+
   } catch (err) {
-    console.log(err);
-    res.sendStatus(500)
+    console.log("🔥 WEBHOOK ERROR:", err);
+    res.sendStatus(500);
   }
 });
 // =========================
