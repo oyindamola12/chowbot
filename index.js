@@ -2205,7 +2205,10 @@ function formatCartUI(cart) {
   });
 
   text += `━━━━━━━━━━━━━━\n💰 Total: ₦${total}\n`;
-  text += `\n🧾 Actions:\n• remove item\n• checkout\n• 1,2,3 add items\n`;
+  text += "🧾 Actions:\n";
+  text += "• type: remove item name\n";
+  text += "• type: 1, 2, 3 to add more\n";
+  text += "• type: checkout\n";
 
   return text;
 }
@@ -2481,8 +2484,9 @@ const link = await createPaymentLink(
 
 
 app.post("/paystack/webhook", async (req, res) => {
+      console.log("🔥 PAYSTACK HIT");
   try {
-    console.log("🔥 PAYSTACK HIT");
+
 
     const event = req.body;
 
