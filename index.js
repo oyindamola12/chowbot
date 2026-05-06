@@ -2544,7 +2544,7 @@ app.post("/paystack/webhook", async (req, res) => {
     console.log("PAYSTACK EVENT:", JSON.stringify(req.body, null, 2));
   } catch (err) {
     console.log(err);
-    res.sendStatus(500);
+    res.sendStatus(500)
   }
 });
 // =========================
