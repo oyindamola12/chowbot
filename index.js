@@ -43,6 +43,33 @@ function calculatePricing(cartTotal) {
   };
 }
 
+// =========================
+// 📍 DISTANCE
+// =========================
+function getDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2;
+
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+// =========================
+// 🚚 DELIVERY
+// =========================
+function calculateDeliveryFee(distanceKm) {
+  const base = 500;
+  const perKm = 150;
+
+  if (distanceKm <= 2) return base;
+  return base + (distanceKm - 2) * perKm;
+}
 
 
 
@@ -124,6 +151,29 @@ async function createPaymentLink(email, amount, metadata) {
     return res.data.data.authorization_url;
   } catch (err) {
     console.log(err.response?.data || err.message);
+    return null;
+  }
+}
+// =========================
+// 📍 GEOCODE
+// =========================
+async function geocodeAddress(address) {
+  try {
+    const res = await axios.get(
+      "https://maps.googleapis.com/maps/api/geocode/json",
+      {
+        params: {
+          address,
+          // key: process.env.GOOGLE_MAPS_KEY,
+        },
+      }
+    );
+
+    const loc = res.data.results[0].geometry.location;
+    return { lat: loc.lat, lng: loc.lng };
+
+  } catch (err) {
+    console.log("Geocode error", err.message);
     return null;
   }
 }
@@ -286,6 +336,36 @@ app.post("/webhook", async (req, res) => {
       );
     }
 
+        // CHECKOUT → ASK LOCATION
+    else if (message === "checkout") {
+      user.step = "address";
+      return twiml.message("📍 Enter delivery address");
+    }
+
+    // ADDRESS → CALCULATE DELIVERY
+    else if (user.step === "address") {
+      const coords = await geocodeAddress(message);
+
+      if (!coords) return twiml.message("❌ Invalid address");
+
+      const restaurant = await getRestaurant(user.restaurant);
+
+      const distance = getDistanceKm(
+        coords.lat,
+        coords.lng,
+        restaurant.lat,
+        restaurant.lng
+      );
+
+      const fee = Math.round(calculateDeliveryFee(distance));
+
+      user.deliveryFee = fee;
+      user.step = "confirm";
+
+      return twiml.message(
+        `🚚 Delivery Fee: ₦${fee}\nType confirm`
+      );
+    }
     // REMOVE
     else if (message.startsWith("remove ")) {
       const name = message.replace("remove ", "").toLowerCase();
@@ -403,6 +483,41 @@ const link = await createPaymentLink(
       `💳 Pay here:\n${link}`
   );
 }
+
+//     // FINAL CHECKOUT
+//     else if (message === "confirm") {
+//       let total = 0;
+
+//       user.cart.forEach(i => {
+//         total += i.price * i.qty;
+//       });
+
+//       const pricing = calculatePricing(total);
+//       const final = pricing.customerPays + user.deliveryFee;
+
+//       const orderId = uuidv4();
+
+//       await db.collection("pendingOrders").doc(orderId).set({
+//         ...user,
+//         total,
+//         deliveryFee: user.deliveryFee,
+//         final,
+//         status: "pending"
+//       });
+
+//       const link = await createPaymentLink(
+//         "user@email.com",
+//         final,
+//         { orderId }
+//       );
+
+//       return twiml.message(`💳 Pay: ${link}`);
+//     }
+
+//     else {
+//       return twiml.message("Send hi");
+//     }
+
     // RESET
     else if (message === "reset") {
       sessions[from] = {};
