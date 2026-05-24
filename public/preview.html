@@ -341,7 +341,7 @@ footer {
 
 
 </select>
-  <input id="location" placeholder="Location">
+  <input id="location" placeholder="enter full address">
   <input id="fee" placeholder="Delivery Fee">
  
 </div>
@@ -1116,6 +1116,8 @@ async function register() {
     const location = document.getElementById("location").value.trim();
     const fee = document.getElementById("fee").value.trim();
     const resultEl = document.getElementById("result");
+    const state = document.getElementById("stateSelect").value;
+    const localGovt = document.getElementById("lgaSelect").value;
 
     if (!name || !phone || !location || !fee) {
       alert("⚠️ All fields are required!");

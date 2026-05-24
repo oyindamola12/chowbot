@@ -188,6 +188,73 @@ async function sendMenuText(restaurantId, twiml, res) {
   res.type("text/xml").send(twiml.toString());
 }
 
+// ===============================
+// 🔥 ID GENERATOR FUNCTION
+// ===============================
+function generateRestaurantId(name) {
+  const cleanName = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  const uniquePart =
+    Date.now().toString(36) +
+    Math.random().toString(36).substring(2, 6);
+
+  return `${cleanName}-${uniquePart}`;
+}
+app.post("/register-restaurant", async (req, res) => {
+  try {
+    const {
+      name,
+      phone,
+      state,
+      localGovt,
+      deliveryFee,
+      location
+    } = req.body;
+
+    // validation
+    if (!name || !phone || !state || !localGovt || !deliveryFee||!location) {
+      return res.json({
+        success: false,
+        message: "Missing required fields"
+      });
+    }
+
+    // 🔥 generate custom ID
+    const restaurantId = generateRestaurantId(name);
+
+    // 💾 save to Firestore
+    await db.collection("restaurants").doc(restaurantId).set({
+      restaurantId,
+      name,
+      phone,
+      state,
+      localGovt,
+      address:location,
+      deliveryFee: Number(deliveryFee),
+
+      createdAt: new Date()
+    });
+
+    // response
+    res.json({
+      success: true,
+      restaurantId,
+      whatsappLink: `https://wa.me/${phone}`
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      message: "Server error"
+    });
+  }
+});
+
 // =========================
 // WEBHOOK
 // =========================
