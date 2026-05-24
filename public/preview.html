@@ -271,6 +271,10 @@ footer {
   <input id="name" placeholder="Restaurant Name">
   <input id="phone" placeholder="WhatsApp Number">
   <input id="location" placeholder="Location">
+  <select name="state" required>
+  <option value="">Select State</option>
+  <option value="lagos">Lagos</option>
+</select>
   <input id="fee" placeholder="Delivery Fee">
  
 </div>
@@ -287,8 +291,22 @@ footer {
 function scrollToSignup() {
   document.getElementById("signup").scrollIntoView({ behavior: "smooth" });
 }
+const lagosLGAs = [
+  "Agege", "Ajeromi-Ifelodun", "Alimosho", "Amuwo-Odofin",
+  "Apapa", "Badagry", "Epe", "Eti-Osa",
+  "Ibeju-Lekki", "Ifako-Ijaiye", "Ikeja", "Ikorodu",
+  "Kosofe", "Lagos Island", "Lagos Mainland",
+  "Mushin", "Ojo", "Oshodi-Isolo", "Shomolu", "Surulere"
+];
 
+const lgaSelect = document.querySelector("[name='lga']");
 
+lagosLGAs.forEach(lga => {
+  const option = document.createElement("option");
+  option.value = lga.toLowerCase();
+  option.textContent = lga;
+  lgaSelect.appendChild(option);
+});
 
 // async function register() {
 //   try {
