@@ -271,9 +271,50 @@ footer {
   <input id="name" placeholder="Restaurant Name">
   <input id="phone" placeholder="WhatsApp Number">
   <input id="location" placeholder="Location">
-  <select name="state" required>
-  <option value="">Select State</option>
-  <option value="lagos">Lagos</option>
+<select name="state"  id="stateSelect" onchange="loadLGA()" required>
+<option value="">Select State</option>
+ <option value="abia">Abia</option>
+<option value="adamawa">Adamawa</option>
+<option value="akwa-ibom">Akwa Ibom</option>
+<option value="anambra">Anambra</option>
+<option value="bauchi">Bauchi</option>
+<option value="bayelsa">Bayelsa</option>
+<option value="benue">Benue</option>
+<option value="borno">Borno</option>
+<option value="cross-river">Cross River</option>
+<option value="delta">Delta</option>
+<option value="ebonyi">Ebonyi</option>
+<option value="edo">Edo</option>
+<option value="ekiti">Ekiti</option>
+<option value="enugu">Enugu</option>
+<option value="gombe">Gombe</option>
+<option value="imo">Imo</option>
+<option value="jigawa">Jigawa</option>
+<option value="kaduna">Kaduna</option>
+<option value="kano">Kano</option>
+<option value="katsina">Katsina</option>
+<option value="kebbi">Kebbi</option>
+<option value="kogi">Kogi</option>
+<option value="kwara">Kwara</option>
+<option value="lagos">Lagos</option>
+<option value="nasarawa">Nasarawa</option>
+<option value="niger">Niger</option>
+<option value="ogun">Ogun</option>
+<option value="ondo">Ondo</option>
+<option value="osun">Osun</option>
+<option value="oyo">Oyo</option>
+<option value="plateau">Plateau</option>
+<option value="rivers">Rivers</option>
+<option value="sokoto">Sokoto</option>
+<option value="taraba">Taraba</option>
+<option value="yobe">Yobe</option>
+<option value="zamfara">Zamfara</option>
+<option value="fct">Federal Capital Territory (Abuja)</option>
+</select>
+
+
+<select id="lgaSelect">
+  <option value="">Select LGA</option>
 </select>
   <input id="fee" placeholder="Delivery Fee">
  
@@ -291,99 +332,706 @@ footer {
 function scrollToSignup() {
   document.getElementById("signup").scrollIntoView({ behavior: "smooth" });
 }
-const lagosLGAs = [
-  "Agege", "Ajeromi-Ifelodun", "Alimosho", "Amuwo-Odofin",
-  "Apapa", "Badagry", "Epe", "Eti-Osa",
-  "Ibeju-Lekki", "Ifako-Ijaiye", "Ikeja", "Ikorodu",
-  "Kosofe", "Lagos Island", "Lagos Mainland",
-  "Mushin", "Ojo", "Oshodi-Isolo", "Shomolu", "Surulere"
+
+const Abia = [
+"Aba North", "Aba South", "Arochukwu", "Bende", "Ikwuano",
+"Isiala-Ngwa North", "Isiala-Ngwa South", "Isuikwato", "Obi Nwa",
+"Ohafia", "Osisioma", "Ngwa", "Ugwunagbo", "Ukwa East",
+"Ukwa West", "Umuahia North", "Umuahia South", "Umu-Neochi"
 ];
 
-const lgaSelect = document.querySelector("[name='lga']");
+const Adamawa = [
+"Demsa", "Fufore", "Ganye", "Gayuk", "Gombi", "Guyuk", "Hong",
+"Jada", "Lamurde", "Madagali", "Maiha", "Mayo-Belwa", "Michika",
+"Mubi North", "Mubi South", "Numan", "Shelleng", "Song",
+"Toungo", "Yola North", "Yola South"
+];
 
-lagosLGAs.forEach(lga => {
-  const option = document.createElement("option");
-  option.value = lga.toLowerCase();
-  option.textContent = lga;
-  lgaSelect.appendChild(option);
-});
+const AkwaIbom = [
+"Abak", "Eastern Obolo", "Eket", "Esit Eket", "Essien Udim",
+"Etim Ekpo", "Etinan", "Ibeno", "Ibesikpo Asutan", "Ibiono-Ibom",
+"Ika", "Ikono", "Ikot Abasi", "Ikot Ekpene", "Ini", "Itu",
+"Mbo", "Mkpat-Enin", "Nsit-Atai", "Nsit-Ibom", "Nsit-Ubium",
+"Obot Akara", "Okobo", "Onna", "Oron", "Oruk Anam", "Udung-Uko",
+"Ukanafun", "Uruan", "Urue-Offong/Oruko", "Uyo"
+];
 
-// async function register() {
-//   try {
-//     const nameEl = document.getElementById("name").value.trim();;
-//     const phoneEl = document.getElementById("phone").value.trim();;
-//     const locationEl = document.getElementById("location").value.trim();;
-//     const feeEl = document.getElementById("fee").value.trim();
-//     const resultEl = document.getElementById("result");
+const Anambra = [
+"Aguata", "Awka North", "Awka South", "Anambra East", "Anambra West",
+"Anaocha", "Ayamelum", "Dunukofia", "Ekwusigo", "Idemili North",
+"Idemili South", "Ihiala", "Njikoka", "Nnewi North", "Nnewi South",
+"Ogbaru", "Onitsha North", "Onitsha South", "Orumba North",
+"Orumba South", "Oyi"
+];
 
-//       if (!nameEl || !phoneEl ||!locationEl||!feeEl) {
-//     alert("⚠️ Field missing text!");
-//     return;
-//   }
-//     const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json"
-//       },
-//       body: JSON.stringify({
-//         name: nameEl.value,
-//         phone: phoneEl.value,
-//         location: locationEl.value,
-//         deliveryFee: feeEl.value
-//       })
-//     });
+const Bauchi = [
+"Alkaleri", "Bauchi", "Bogoro", "Damban", "Darazo", "Dass",
+"Gamawa", "Ganjuwa", "Giade", "Itas/Gadau", "Jama'are",
+"Katagum", "Kirfi", "Misau", "Ningi", "Shira", "Tafawa-Balewa",
+"Toro", "Warji", "Zaki"
+];
 
-//     const data = await res.json();
-//     console.log(data);
+const Bayelsa = [
+"Brass", "Ekeremor", "Kolokuma/Opokuma", "Nembe", "Ogbia",
+"Sagbama", "Southern Ijaw", "Yenagoa"
+];
+const Benue = [
+"Ado", "Agatu", "Apa", "Buruku", "Gboko", "Guma", "Gwer East",
+"Gwer West", "Katsina-Ala", "Konshisha", "Kwande", "Logo",
+"Makurdi", "Obi", "Ogbadibo", "Ohimini", "Oju", "Okpokwu",
+"Otukpo", "Tarka", "Ukum", "Ushongo", "Vandeikya"
+];
+const Borno = [
+"Abadam", "Askira/Uba", "Bama", "Bayo", "Biu", "Chibok", "Damboa",
+"Dikwa", "Gubio", "Guzamala", "Gwoza", "Hawul", "Jere", "Kaga",
+"Kala/Balge", "Konduga", "Kukawa", "Kwaya Kusar", "Mafa",
+"Magumeri", "Maiduguri", "Marte", "Mobbar", "Monguno", "Ngala",
+"Nganzai", "Shani"
+];
+const CrossRiver = [
+"Abi", "Akamkpa", "Akpabuyo", "Bakassi", "Bekwarra", "Biase",
+"Boki", "Calabar Municipal", "Calabar South", "Etung", "Ikom",
+"Obanliku", "Obubra", "Obudu", "Odukpani", "Ogoja", "Yakuur",
+"Yala"
+];
+const Delta = [
+"Aniocha North", "Aniocha South", "Bomadi", "Burutu",
+"Ethiope East", "Ethiope West", "Ika North East", "Ika South",
+"Isoko North", "Isoko South", "Ndokwa East", "Ndokwa West",
+"Okpe", "Oshimili North", "Oshimili South", "Patani",
+"Sapele", "Udu", "Ughelli North", "Ughelli South", "Ukwuani",
+"Uvwie", "Warri North", "Warri South", "Warri South West"
+];
+const Ebonyi = [
+"Edda",
+"Afikpo",
+"Onicha",
+"Ohaozara",
+"Abakaliki",
+"Ishielu",
+"lkwo",
+"Ezza",
+"Ezza South",
+"Ohaukwu",
+"Ebonyi",
+"Ivo"
+]
+const Enugu = [
+"Enugu South,",
+"Igbo-Eze South",
+"Enugu North",
+"Nkanu",
+"Udi Agwu",
+"Oji-River",
+"Ezeagu",
+"IgboEze North",
+"Isi-Uzo",
+"Nsukka",
+"Igbo-Ekiti",
+"Uzo-Uwani",
+"Enugu Eas",
+"Aninri",
+"Nkanu East",
+"Udenu."
+]
+const Edo = [
+"Esan North-East",
+"Esan Central",
+"Esan West",
+"Egor",
+"Ukpoba",
+"Central",
+"Etsako Central",
+"Igueben",
+"Oredo",
+"Ovia SouthWest",
+"Ovia South-East",
+"Orhionwon",
+"Uhunmwonde",
+"Etsako East",
+"Esan South-East"
+]
+const Ekiti = [
+"Ado",
+"Ekiti-East",
+"Ekiti-West",
+"Emure/Ise/Orun",
+"Ekiti South-West",
+"Ikere",
+"Irepodun",
+"Ijero,",
+"Ido/Osi",
+"Oye",
+"Ikole",
+"Moba",
+"Gbonyin",
+"Efon",
+"Ise/Orun",
+"Ilejemeje."
+]
+const Abuja = [
+"Abaji",
+"Abuja Municipal",
+"Bwari",
+"Gwagwalada",
+"Kuje",
+"Kwali"
+]
+const Gombe = [
+"Akko",
+"Balanga",
+"Billiri",
+"Dukku",
+"Kaltungo",
+"Kwami",
+"Shomgom",
+"Funakaye",
+"Gombe",
+"Nafada/Bajoga",
+"Yamaltu/Delta."
+]
+const Imo = [
+"Aboh-Mbaise",
+"Ahiazu-Mbaise",
+"Ehime-Mbano",
+"Ezinihitte",
+"Ideato North",
+"Ideato South",
+"Ihitte/Uboma",
+"Ikeduru",
+"Isiala Mbano",
+"Isu",
+"Mbaitoli",
+"Mbaitoli",
+"Ngor-Okpala",
+"Njaba",
+"Nwangele",
+"Nkwerre",
+"Obowo",
+"Oguta",
+"Ohaji/Egbema",
+"Okigwe",
+"Orlu",
+"Orsu",
+"Oru East",
+"Oru West",
+"Owerri-Municipal",
+"Owerri North",
+"Owerri West"
+]
+const Jigawa = [
+"Auyo",
+"Babura",
+"Birni Kudu",
+"Biriniwa",
+"Buji",
+"Dutse",
+"Gagarawa",
+"Garki",
+"Gumel",
+"Guri",
+"Gwaram",
+"Gwiwa",
+"Hadejia",
+"Jahun",
+"Kafin Hausa",
+"Kaugama Kazaure",
+"Kiri Kasamma",
+"Kiyawa",
+"Maigatari",
+"Malam Madori",
+"Miga",
+"Ringim",
+"Roni",
+"Sule-Tankarkar",
+"Taura",
+"Yankwashi"
+]
+const Kaduna = [
+"Birni-Gwari",
+"Chikun",
+"Giwa",
+"Igabi",
+"Ikara",
+"jaba",
+"Jema'a",
+"Kachia",
+"Kaduna North",
+"Kaduna South",
+"Kagarko",
+"Kajuru",
+"Kaura",
+"Kauru",
+"Kubau",
+"Kudan",
+"Lere",
+"Makarfi",
+"Sabon-Gari",
+"Sanga",
+"Soba",
+"Zango-Kataf",
+"Zaria"
+]
+const Kano = [
+"Ajingi",
+"Albasu",
+"Bagwai",
+"Bebeji",
+"Bichi",
+"Bunkure",
+"Dala",
+"Dambatta",
+"Dawakin Kudu",
+"Dawakin Tofa",
+"Doguwa",
+"Fagge",
+"Gabasawa",
+"Garko",
+"Garum",
+"Mallam",
+"Gaya",
+"Gezawa",
+"Gwale",
+"Gwarzo",
+"Kabo",
+"Kano Municipal",
+"Karaye",
+"Kibiya",
+"Kiru",
+"kumbotso",
+"Ghari",
+"Kura",
+"Madobi",
+"Makoda",
+"Minjibir",
+"Nasarawa",
+"Rano",
+"Rimin Gado",
+"Rogo",
+"Shanono",
+"Sumaila",
+"Takali",
+"Tarauni",
+"Tofa",
+"Tsanyawa",
+"Tudun Wada",
+"Ungogo",
+"Warawa",
+"Wudil"
+]
+const Katsina = [
+"Bakori",
+"Batagarawa",
+"Batsari",
+"Baure",
+"Bindawa",
+"Charanchi",
+"Dandume",
+"Danja",
+"Dan Musa",
+"Daura",
+"Dutsi",
+"Dutsin-Ma",
+"Faskari",
+"Funtua",
+"Ingawa",
+"Jibia",
+"Kafur",
+"Kaita",
+"Kankara",
+"Kankia",
+"Katsina",
+"Kurfi",
+"Kusada",
+"Mai'Adua",
+"Malumfashi",
+"Mani",
+"Mashi",
+"Matazuu",
+"Musawa",
+"Rimi",
+"Sabuwa",
+"Safana",
+"Sandamu",
+"Zango"
+]
+const Kebbi = [
+"Aleiro",
+"Arewa-Dandi",
+"Argungu",
+"Augie",
+"Bagudo",
+"Birnin Kebbi",
+"Bunza",
+"Dandi",
+"Fakai",
+"Gwandu",
+"Jega",
+"Kalgo",
+"Koko/Besse",
+"Maiyama",
+"Ngaski",
+"Sakaba",
+"Shanga",
+"Suru",
+"Wasagu/Danko",
+"Yauri",
+"Zuru"
+]
+const Kogi = [
+"Adavi",
+"Ajaokuta",
+"Ankpa",
+"Bassa",
+"Dekina",
+"Ibaji",
+"Idah",
+"Igalamela-Odolu",
+"Ijumu",
+"Kabba/Bunu",
+"Kogi",
+"Lokoja",
+"Mopa-Muro",
+"Ofu",
+"Ogori/Mangongo",
+"Okehi",
+"Okene",
+"Olamabolo",
+"Omala",
+"Yagba East",
+"Yagba West"
+]
+const Kwara = [
+"Asa",
+"Baruten",
+"Edu",
+"Ekiti",
+"Ifelodun",
+"Ilorin East",
+"Ilorin West",
+"Irepodun",
+"Isin",
+"Kaiama",
+"Moro",
+"Offa",
+"Oke-Ero",
+"Oyun",
+"Pategi"
+]
+const Lagos = [
+"Agege",
+"Ajeromi-Ifelodun",
+"Alimosho",
+"Amuwo-Odofin",
+"Apapa",
+"Badagry",
+"Epe",
+"Eti-Osa",
+"Ibeju/Lekki",
+"Ifako-Ijaye",
+"Ikeja",
+"Ikorodu",
+"Kosofe",
+"Lagos Island",
+"Lagos Mainland",
+"Mushin",
+"Ojo",
+"Oshodi-Isolo",
+"Shomolu",
+"Surulere"
+]
+const Nasarawa = [
+"Akwanga",
+"Awe",
+"Doma",
+"Karu",
+"Keana",
+"Keffi",
+"Kokona",
+"Lafia",
+"Nasarawa",
+"Nasarawa-Eggon",
+"Obi",
+"Toto",
+"Wamba"
+]
+const Niger = [
+"Agaie",
+"Agwara",
+"Bida",
+"Borgu",
+"Bosso",
+"Chanchaga",
+"Edati",
+"Gbako",
+"Gurara",
+"Katcha",
+"Kontagora",
+"Lapai",
+"Lavun",
+"Magama",
+"Mariga",
+"Mashegu",
+"Mokwa",
+"Muya",
+"Pailoro",
+"Rafi",
+"Rijau",
+"Shiroro",
+"Suleja",
+"Tafa",
+"Wushishi"
+]
+const Ogun = [
+"Abeokuta North",
+"Abeokuta South",
+"Ado-Odo/Ota",
+"Yewa North",
+"Yewa South",
+"Ewekoro",
+"Ifo",
+"Ijebu East",
+"Ijebu North",
+"Ijebu North East",
+"Ijebu Ode",
+"Ikenne",
+"Imeko-Afon",
+"Ipokia",
+"Obafemi-Owode",
+"Ogun Waterside",
+"Odeda",
+"Odogbolu",
+"Remo North",
+"Shagamu"
+]
+const Ondo = [
+"Akoko North East",
+"Akoko North West",
+"Akoko South Akure East",
+"Akoko South West",
+"Akure North",
+"Akure South",
+"Ese-Odo",
+"Idanre",
+"Ifedore",
+"Ilaje",
+"Ile-Oluji",
+"Okeigbo",
+"Irele",
+"Odigbo",
+"Okitipupa",
+"Ondo East",
+"Ondo West",
+"Ose",
+"Owo"
+]
+const Osun = [
+"Aiyedade",
+"Aiyedire",
+"Atakumosa East",
+"Atakumosa West",
+"Boluwaduro",
+"Boripe",
+"Ede North",
+"Ede South",
+"Egbedore",
+"Ejigbo",
+"Ife Central",
+"Ife East",
+"Ife North",
+"Ife South",
+"Ifedayo",
+"Ifelodun",
+"Ila",
+"Ilesha East",
+"Ilesha West",
+"Irepodun",
+"Irewole",
+"Isokan",
+"Iwo",
+"Obokun",
+"Odo-Otin",
+"Ola-Oluwa",
+"Olorunda",
+"Oriade",
+"Orolu",
+"Osogbo"
+]
+const Oyo = [
+"Afijio",
+"Akinyele",
+"Atiba",
+"Atisbo",
+"Egbeda",
+"Ibadan Central",
+"Ibadan North",
+"Ibadan North West",
+"Ibadan South East",
+"Ibadan South West",
+"Ibarapa Central",
+"Ibarapa East",
+"Ibarapa North",
+"Ido",
+"Irepo",
+"Iseyin",
+"Itesiwaju",
+"Iwajowa",
+"Kajola",
+"Lagelu Ogbomosho North",
+"Ogbomosho South",
+"Ogo Oluwa",
+"Olorunsogo",
+"Oluyole",
+"Ona-Ara",
+"Orelope",
+"Ori Ire",
+"Oyo East",
+"Oyo West",
+"Saki East",
+"Saki West",
+"Surulere"
+]
+const Plateau = [
+"Barikin Ladi",
+"Bassa",
+"Bokkos",
+"Jos East",
+"Jos North",
+"Jos South",
+"Kanam",
+"Kanke",
+"Langtang North",
+"Langtang South",
+"Mangu",
+"Mikang",
+"Pankshin",
+"Qua'an Pan",
+"Riyom",
+"Shendam",
+"Wase"
+]
+const Rivers = [
+"Abua/Odual",
+"Ahoada East",
+"Ahoada West",
+"Akuku Toru",
+"Andoni",
+"Asari-Toru",
+"Bonny",
+"Degema",
+"Emohua",
+"Eleme",
+"Etche",
+"Gokana",
+"Ikwerre",
+"Khana",
+"Obio/Akpor",
+"Ogba/Egbema/Ndoni",
+"Ogu/Bolo",
+"Okrika",
+"Omumma",
+"Opobo/Nkoro",
+"Oyigbo",
+"Port-Harcourt",
+"Tai"
+]
+const Sokoto = [
+"Binji",
+"Bodinga",
+"Dange-shnsi",
+"Gada",
+"Goronyo",
+"Gudu",
+"Gawabawa",
+"Illela",
+"Isa",
+"Kware",
+"kebbe",
+"Rabah",
+"Sabon birni",
+"Shagari",
+"Silame",
+"Sokoto North",
+"Sokoto South",
+"Tambuwal",
+"Tqngaza",
+"Tureta",
+"Wamako",
+"Wurno",
+"Yabo"
+]
+const Taraba = [
+"Ardo-kola",
+"Bali",
+"Donga",
+"Gashaka",
+"Cassol",
+"Ibi",
+"Jalingo",
+"Karin-Lamido",
+"Kurmi",
+"Lau",
+"Sardauna",
+"Takum",
+"Ussa",
+"Wukari",
+"Yorro",
+"Zing"
+]
+const Yobe = [
+"Bade",
+"Bursari",
+"Damaturu",
+"Fika",
+"Fune",
+"Geidam",
+"Gujba",
+"Gulani",
+"Jakusko",
+"Karasuwa",
+"Karawa",
+"Machina",
+"Nangere",
+"Nguru Potiskum",
+"Tarmua",
+"Yunusari",
+"Yusufari"
+]
+const Zamfara = [
+"Anka",
+"Bakura",
+"Birnin Magaji",
+"Bukkuyum",
+"Bungudu",
+"Gummi",
+"Gusau",
+"Kaura",
+"Namoda",
+"Maradun",
+"Maru",
+"Shinkafi",
+"Talata Mafara",
+"Tsafe",
+"Zurmi"
+]
+  const state = document.getElementById("stateSelect").value;
+  const lgaSelect = document.getElementById("lgaSelect");
 
-// if (data.whatsappLink) {
+function loadLGA() {
+  const state = document.getElementById("stateSelect").value;
+  const lgaSelect = document.getElementById("lgaSelect");
 
-//   const menuLink = `menu.html?id=${data.restaurantId}`;
+  lgaSelect.innerHTML = `<option value="">Select LGA</option>`;
 
-//   resultEl.innerHTML = `
-//     <div style="margin-top:20px;">
-//       <h3>✅ Registered Successfully!</h3>
+  if (!state || !lgaData[state]) return;
 
-//       <p style="margin-top:10px;">
-//         Next step: Add your menu 👇
-//       </p>
-
-//       <a href="${menuLink}" style="
-//         display:inline-block;
-//         margin-top:10px;
-//         padding:12px 20px;
-//         background:black;
-//         color:white;
-//         border-radius:25px;
-//         text-decoration:none;
-//       ">
-//         🍽 Add Menu
-//       </a>
-
-//       <br><br>
-
-//       <a href="${data.whatsappLink}" target="_blank" style="
-//         display:inline-block;
-//         padding:12px 20px;
-//         background:#25D366;
-//         color:white;
-//         border-radius:25px;
-//         text-decoration:none;
-//       ">
-//         💬 Open WhatsApp Store
-//       </a>
-//     </div>
-//   `;
-// } else {
-//       resultEl.innerHTML = "❌ Registration failed";
-//     }
-
-//   } catch (err) {
-//     console.error(err);
-//     document.getElementById("result").innerText = "❌ Error connecting to server";
-//   }
-// }
-
+  lgaData[state].forEach(lga => {
+    const option = document.createElement("option");
+    option.value = lga.toLowerCase().replace(/\s/g, "-");
+    option.textContent = lga;
+    lgaSelect.appendChild(option);
+  });
+}
 
 async function register() {
   try {
@@ -407,7 +1055,9 @@ async function register() {
         name,
         phone,
         location,
-        deliveryFee: fee
+        deliveryFee: fee,
+        state,
+        localGovt:lgaSelect
       })
     });
 
