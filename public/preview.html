@@ -1109,17 +1109,20 @@ document.getElementById("stateSelect").addEventListener("change", function () {
     lgaSelect.appendChild(option);
   });
 });
+
+
 async function register() {
   try {
     const name = document.getElementById("name").value.trim();
     const phone = document.getElementById("phone").value.trim();
     const location = document.getElementById("location").value.trim();
     const fee = document.getElementById("fee").value.trim();
-    const resultEl = document.getElementById("result");
     const state = document.getElementById("stateSelect").value;
     const localGovt = document.getElementById("lgaSelect").value;
+    const resultEl = document.getElementById("result");
 
-    if (!name || !phone || !location || !fee) {
+    // ✅ FIXED VALIDATION
+    if (!name || !phone || !location || !fee || !state || !localGovt) {
       alert("⚠️ All fields are required!");
       return;
     }
@@ -1135,7 +1138,7 @@ async function register() {
         location,
         deliveryFee: fee,
         state,
-        localGovt:lgaSelect
+        localGovt   // ✅ FIXED (not lgaSelect)
       })
     });
 
@@ -1186,6 +1189,85 @@ async function register() {
     document.getElementById("result").innerText = "❌ Server error";
   }
 }
+
+
+// async function register() {
+//   try {
+//     const name = document.getElementById("name").value.trim();
+//     const phone = document.getElementById("phone").value.trim();
+//     const location = document.getElementById("location").value.trim();
+//     const fee = document.getElementById("fee").value.trim();
+//     const resultEl = document.getElementById("result");
+//     const state = document.getElementById("stateSelect").value;
+//     const localGovt = document.getElementById("lgaSelect").value;
+
+//     if (!name || !phone || !location || !fee) {
+//       alert("⚠️ All fields are required!");
+//       return;
+//     }
+
+//     const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json"
+//       },
+//       body: JSON.stringify({
+//         name,
+//         phone,
+//         location,
+//         deliveryFee: fee,
+//         state,
+//         localGovt:lgaSelect
+//       })
+//     });
+
+//     const data = await res.json();
+//     console.log(data);
+
+//     if (data.success) {
+//       const menuLink = `menu.html?id=${data.restaurantId}`;
+
+//       resultEl.innerHTML = `
+//         <div style="margin-top:20px;">
+//           <h3>✅ Registered Successfully!</h3>
+
+//           <p>Add your menu 👇</p>
+
+//           <a href="${menuLink}" style="
+//             display:inline-block;
+//             margin-top:10px;
+//             padding:12px 20px;
+//             background:black;
+//             color:white;
+//             border-radius:25px;
+//             text-decoration:none;
+//           ">
+//             🍽 Add Menu
+//           </a>
+
+//           ${data.whatsappLink ? `
+//           <br><br>
+//           <a href="${data.whatsappLink}" target="_blank" style="
+//             display:inline-block;
+//             padding:12px 20px;
+//             background:#25D366;
+//             color:white;
+//             border-radius:25px;
+//           ">
+//             💬 Open WhatsApp Store
+//           </a>
+//           ` : ""}
+//         </div>
+//       `;
+//     } else {
+//       resultEl.innerHTML = `❌ ${data.message || "Registration failed"}`;
+//     }
+
+//   } catch (err) {
+//     console.error(err);
+//     document.getElementById("result").innerText = "❌ Server error";
+//   }
+// }
 </script>
 
 </body>

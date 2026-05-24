@@ -204,6 +204,7 @@ function generateRestaurantId(name) {
 
   return `${cleanName}-${uniquePart}`;
 }
+
 app.post("/register-restaurant", async (req, res) => {
   try {
     const {
