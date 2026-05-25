@@ -1320,15 +1320,31 @@ async function getSession(phone) {
   return data;
 }
 
+// async function saveSession(phone, session) {
+//   const docRef = db.collection("sessions").doc(phone);
+//   const toSave = {
+//     ...session,
+//     phone,
+//     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+//     expireAt: new Date(Date.now() + SESSION_TTL_SECONDS * 1000),
+//   };
+//   await docRef.set(toSave, { merge: true });
+// }
 async function saveSession(phone, session) {
   const docRef = db.collection("sessions").doc(phone);
   const toSave = {
-    ...session,
-    phone,
+    cart: session.cart || [],
+    restaurant: session.restaurant || null,
+    step: session.step || "start",
+    available: session.available || [],
+    phone: phone,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    expireAt: new Date(Date.now() + SESSION_TTL_SECONDS * 1000),
+    expireAt: new Date(Date.now() + 86400 * 1000),
   };
   await docRef.set(toSave, { merge: true });
+  // Optional: read back to confirm
+  const saved = await docRef.get();
+  console.log("✅ Verified saved session:", saved.data());
 }
 
 async function deleteSession(phone) {
@@ -1621,13 +1637,16 @@ app.post("/webhook", async (req, res) => {
 
   // Load session
   let user = await getSession(from);
-  console.log(`[${from}] Loaded: step=${user.step}, restaurant=${user.restaurant}, cart=${user.cart.length} items`);
+  console.log("Loaded user:", user);
 
-  // Ensure defaults
-  if (!user.step) {
-    user = { cart: [], restaurant: null, step: "start", available: [] };
-    await saveSession(from, user);
-  }
+  // Only normalize missing fields – do NOT save here yet
+  if (user.step === undefined) user.step = "start";
+  if (!user.cart) user.cart = [];
+  if (user.restaurant === undefined) user.restaurant = null;
+  if (!user.available) user.available = [];
+
+  // ❌ REMOVE the extra reset block – it was wiping sessions after restaurant choice
+  // if (user.step === "start" && !user.restaurant && user.cart.length === 0) { ... }
 
   try {
     // ---------- START ----------
@@ -1638,7 +1657,6 @@ app.post("/webhook", async (req, res) => {
         user.cart = [];
         user.step = null;
         await saveSession(from, user);
-        console.log(`[${from}] Direct menu for restaurant ${id}`);
         await buildMenuTwiML(id, twiml);
         return res.type("text/xml").send(twiml.toString());
       }
@@ -1670,37 +1688,44 @@ app.post("/webhook", async (req, res) => {
       } else {
         user.restaurant = selected.id;
         user.cart = [];
-        user.step = null; // clear step so future messages go to add items
+        user.step = null;
         await saveSession(from, user);
-        console.log(`[${from}] Chosen restaurant: ${selected.id}, session saved`);
+        console.log(`Chosen restaurant saved: ${user.restaurant}`);
         await buildMenuTwiML(selected.id, twiml);
         return res.type("text/xml").send(twiml.toString());
       }
     }
     // ---------- ADD ITEMS (numbers, e.g. "1,2,3") ----------
     else if (/^[\d,\s]+$/.test(message)) {
-      console.log(`[${from}] Add items - user.restaurant = ${user.restaurant}`);
+      console.log(`Add items - restaurant in session: ${user.restaurant}`);
       if (!user.restaurant) {
-        // Attempt to recover: if restaurant is missing but we have a pending restaurant from previous step? (should not happen)
-        twiml.message("⚠️ Type hi first or reset your session with 'reset'");
-      } else {
-        const menu = await getMenu(user.restaurant);
-        const numbers = parseMultipleItems(message);
-        let added = [];
-        numbers.forEach((num) => {
-          const item = menu[num-1];
-          if (!item) return;
-          const existing = user.cart.find(i => i.id === item.id);
-          if (existing) existing.qty++;
-          else user.cart.push({ ...item, qty: 1 });
-          added.push(item.name);
-        });
-        if (added.length) {
+        // If missing, try to recover by reloading session once
+        const fresh = await getSession(from);
+        if (fresh.restaurant) {
+          user.restaurant = fresh.restaurant;
           await saveSession(from, user);
-          twiml.message(`✅ Added:\n• ${added.join("\n• ")}\n\n${formatCartUI(user.cart)}`);
+          console.log(`Recovered restaurant: ${user.restaurant}`);
         } else {
-          twiml.message("❌ No valid item numbers");
+          twiml.message("⚠️ No restaurant selected. Please send 'hi' again or use 'reset'.");
+          return res.type("text/xml").send(twiml.toString());
         }
+      }
+      const menu = await getMenu(user.restaurant);
+      const numbers = parseMultipleItems(message);
+      let added = [];
+      numbers.forEach((num) => {
+        const item = menu[num-1];
+        if (!item) return;
+        const existing = user.cart.find(i => i.id === item.id);
+        if (existing) existing.qty++;
+        else user.cart.push({ ...item, qty: 1 });
+        added.push(item.name);
+      });
+      if (added.length) {
+        await saveSession(from, user);
+        twiml.message(`✅ Added:\n• ${added.join("\n• ")}\n\n${formatCartUI(user.cart)}`);
+      } else {
+        twiml.message("❌ No valid item numbers");
       }
     }
     // ---------- REMOVE ITEM ----------
@@ -1729,6 +1754,8 @@ app.post("/webhook", async (req, res) => {
     else if (message === "checkout") {
       if (!user.cart.length) {
         twiml.message("🛒 Cart empty");
+      } else if (!user.restaurant) {
+        twiml.message("⚠️ No restaurant selected. Start over.");
       } else {
         let cartTotal = 0;
         user.cart.forEach(i => cartTotal += i.price * i.qty);
@@ -1740,7 +1767,7 @@ app.post("/webhook", async (req, res) => {
         });
         const link = await createPaymentLink(
           "user@email.com", pricing.customerPays,
-          { orderId: orderId.toString(), phone: from, restaurant: user.restaurant, cart: JSON.stringify(user.cart) }
+          { orderId, phone: from, restaurant: user.restaurant, cart: JSON.stringify(user.cart) }
         );
         twiml.message(
           `🧾 ORDER SUMMARY\n\n${formatCartUI(user.cart)}\n\n🚚 Fee: ₦${pricing.serviceFee}\n💰 Total: ₦${pricing.customerPays}\n\n💳 Pay here:\n${link}`

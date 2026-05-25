@@ -5,24 +5,19 @@ const SESSION_COLLECTION = "sessions";
 const SESSION_TTL_SECONDS = 86400; // 24 hours
 
 async function getSession(phone) {
-  const docRef = db.collection(SESSION_COLLECTION).doc(phone);
+  const docRef = db.collection("sessions").doc(phone);
   const doc = await docRef.get();
-  
   if (!doc.exists) {
-    // return default empty session
-    return {
-      cart: [],
-      restaurant: null,
-      step: "start",
-      available: [],
-    };
+    return { cart: [], restaurant: null, step: "start", available: [] };
   }
-  
   const data = doc.data();
-  // remove firestore internal fields
-  delete data.expireAt;
-  delete data.updatedAt;
-  return data;
+  // Return a clean object with only the fields we need
+  return {
+    cart: data.cart || [],
+    restaurant: data.restaurant || null,
+    step: data.step || "start",
+    available: data.available || [],
+  };
 }
 
 async function saveSession(phone, session) {
