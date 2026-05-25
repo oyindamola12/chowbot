@@ -213,7 +213,7 @@ app.post("/register-restaurant", async (req, res) => {
       state,
       localGovt,
       deliveryFee,
-      location
+      location,
     } = req.body;
 
     // validation
@@ -224,7 +224,23 @@ app.post("/register-restaurant", async (req, res) => {
       });
     }
 
+     // =========================
+    // 2. CHECK DUPLICATE PHONE
+    // =========================
+    const existing = await db
+      .collection("restaurants")
+      .where("phone", "==", phone)
+      .get();
+
+    if (!existing.empty) {
+      return res.json({
+        success: false,
+        message: "⚠️ This WhatsApp number is already registered. Please use a different number."
+      });
+    }
+
     // 🔥 generate custom ID
+    
     const restaurantId = generateRestaurantId(name);
 
     // 💾 save to Firestore
