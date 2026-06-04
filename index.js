@@ -2154,35 +2154,90 @@ app.post("/webhook", async (req, res) => {
       }
     }
     // ---------- ADD ITEMS ----------
-    else if (/^[\d,\s]+$/.test(message)) {
-      if (!user.restaurant) {
-        const fresh = await getSession(from);
-        if (fresh.restaurant) {
-          user.restaurant = fresh.restaurant;
-          await saveSession(from, user);
-        } else {
-          twiml.message("⚠️ No restaurant selected. Send 'hi' again.");
-          return res.type("text/xml").send(twiml.toString());
-        }
-      }
-      const menu = await getMenu(user.restaurant);
-      const numbers = parseMultipleItems(message);
-      let added = [];
-      numbers.forEach((num) => {
-        const item = menu[num-1];
-        if (!item) return;
-        const existing = user.cart.find(i => i.id === item.id);
-        if (existing) existing.qty++;
-        else user.cart.push({ ...item, qty: 1 });
-        added.push(item.name);
-      });
-      if (added.length) {
-        await saveSession(from, user);
-        twiml.message(`✅ Added:\n• ${added.join("\n• ")}\n\n${formatCartUI(user.cart)}`);
-      } else {
-        twiml.message("❌ No valid item numbers");
-      }
+    // else if (/^[\d,\s]+$/.test(message)) {
+    //   if (!user.restaurant) {
+    //     const fresh = await getSession(from);
+    //     if (fresh.restaurant) {
+    //       user.restaurant = fresh.restaurant;
+    //       await saveSession(from, user);
+    //     } else {
+    //       twiml.message("⚠️ No restaurant selected. Send 'hi' again.");
+    //       return res.type("text/xml").send(twiml.toString());
+    //     }
+    //   }
+    //   const menu = await getMenu(user.restaurant);
+    //   const numbers = parseMultipleItems(message);
+    //   let added = [];
+    //   numbers.forEach((num) => {
+    //     const item = menu[num-1];
+    //     if (!item) return;
+    //     const existing = user.cart.find(i => i.id === item.id);
+    //     if (existing) existing.qty++;
+    //     else user.cart.push({ ...item, qty: 1 });
+    //     added.push(item.name);
+    //   });
+    //   if (added.length) {
+    //     await saveSession(from, user);
+    //     twiml.message(`✅ Added:\n• ${added.join("\n• ")}\n\n${formatCartUI(user.cart)}`);
+    //   } else {
+    //     twiml.message("❌ No valid item numbers");
+    //   }
+    // }
+
+    // ---------- ADD ITEMS (supports "1,2,3" or "1 x2" or "4 x4") ----------
+else if (/^[\d,\s]+$/.test(message) || /^\d+\s*x\s*\d+$/i.test(message)) {
+  if (!user.restaurant) {
+    const fresh = await getSession(from);
+    if (fresh.restaurant) {
+      user.restaurant = fresh.restaurant;
+      await saveSession(from, user);
+    } else {
+      twiml.message("⚠️ No restaurant selected. Send 'hi' again.");
+      return res.type("text/xml"). send(twiml.toString());
     }
+  }
+
+  const menu = await getMenu(user.restaurant);
+  let additions = []; // array of {index, qty}
+
+  // Check for quantity format: "number x quantity"
+  const quantityMatch = message.match(/^(\d+)\s*x\s*(\d+)$/i);
+  if (quantityMatch) {
+    const idx = parseInt(quantityMatch[1]) - 1;
+    const qty = parseInt(quantityMatch[2]);
+    if (idx >= 0 && idx < menu.length && qty > 0) {
+      additions.push({ index: idx, qty });
+    } else {
+      twiml.message("❌ Invalid item number or quantity.");
+      return res.type("text/xml").send(twiml.toString());
+    }
+  } else {
+    // Old format: comma-separated numbers (each with qty=1)
+    const numbers = parseMultipleItems(message);
+    numbers.forEach(num => {
+      const idx = num - 1;
+      if (idx >= 0 && idx < menu.length) {
+        additions.push({ index: idx, qty: 1 });
+      }
+    });
+  }
+
+  if (additions.length === 0) {
+    twiml.message("❌ No valid item numbers");
+  } else {
+    let added = [];
+    additions.forEach(({ index, qty }) => {
+      const item = menu[index];
+      if (!item) return;
+      const existing = user.cart.find(i => i.id === item.id);
+      if (existing) existing.qty += qty;
+      else user.cart.push({ ...item, qty });
+      added.push(`${item.name} x${qty}`);
+    });
+    await saveSession(from, user);
+    twiml.message(`✅ Added:\n• ${added.join("\n• ")}\n\n${formatCartUI(user.cart)}`);
+  }
+}
     // ---------- REMOVE ITEM ----------
     else if (message.startsWith("remove ")) {
       if (!user.restaurant) {
