@@ -3505,6 +3505,89 @@ app.post("/register-restaurant", async (req, res) => {
     res.json({ success: false, message: err.message || "Server error" });
   }
 });
+// =========================
+// 🍽 MENU MANAGEMENT (using API Key)
+// =========================
+
+// Helper: get restaurantId from apiKey
+async function getRestaurantIdFromApiKey(apiKey) {
+  const snapshot = await db.collection("restaurants").where("apiKey", "==", apiKey).limit(1).get();
+  if (snapshot.empty) return null;
+  return snapshot.docs[0].id;
+}
+
+// GET /get-menu/:apiKey
+app.get("/get-menu/:apiKey", async (req, res) => {
+  try {
+    const apiKey = req.params.apiKey;
+    const restaurantId = await getRestaurantIdFromApiKey(apiKey);
+    if (!restaurantId) return res.status(401).json({ error: "Invalid API key" });
+
+    const itemsSnapshot = await db.collection("menus").doc(restaurantId).collection("items").get();
+    const items = [];
+    itemsSnapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+    res.json(items);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// POST /add-item
+app.post("/add-item", async (req, res) => {
+  try {
+    const { apiKey, name, price, image } = req.body;
+    if (!apiKey || !name || !price) return res.status(400).json({ success: false, message: "Missing fields" });
+
+    const restaurantId = await getRestaurantIdFromApiKey(apiKey);
+    if (!restaurantId) return res.status(401).json({ success: false, message: "Invalid API key" });
+
+    const itemId = Date.now().toString(); // simple unique id
+    await db.collection("menus").doc(restaurantId).collection("items").doc(itemId).set({
+      name, price: Number(price), image: image || ""
+    });
+    res.json({ success: true, itemId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// POST /update-item
+app.post("/update-item", async (req, res) => {
+  try {
+    const { apiKey, itemId, name, price, image } = req.body;
+    if (!apiKey || !itemId || !name || !price) return res.status(400).json({ success: false, message: "Missing fields" });
+
+    const restaurantId = await getRestaurantIdFromApiKey(apiKey);
+    if (!restaurantId) return res.status(401).json({ success: false, message: "Invalid API key" });
+
+    await db.collection("menus").doc(restaurantId).collection("items").doc(itemId).update({
+      name, price: Number(price), image: image || ""
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// POST /delete-item
+app.post("/delete-item", async (req, res) => {
+  try {
+    const { apiKey, itemId } = req.body;
+    if (!apiKey || !itemId) return res.status(400).json({ success: false, message: "Missing fields" });
+
+    const restaurantId = await getRestaurantIdFromApiKey(apiKey);
+    if (!restaurantId) return res.status(401).json({ success: false, message: "Invalid API key" });
+
+    await db.collection("menus").doc(restaurantId).collection("items").doc(itemId).delete();
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 // =========================
 // 📞 WHATSAPP WEBHOOK (full customer flow)
