@@ -3310,16 +3310,32 @@ async function getRestaurant(id) {
   return doc.exists ? doc.data() : null;
 }
 
-async function getRestaurantsByLocation(area) {
-  const snapshot = await db
-    .collection("restaurants")
-    .where("location", "==", area.toLowerCase())
-    .get();
-  const list = [];
-  snapshot.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
-  return list;
-}
+// async function getRestaurantsByLocation(area) {
+//   const snapshot = await db
+//     .collection("restaurants")
+//     .where("location", "==", area.toLowerCase())
+//     .get();
+//   const list = [];
+//   snapshot.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+//   return list;
+// }
 
+async function getRestaurantsByLocation(input) {
+  const searchTerm = input.toLowerCase().trim();
+  // Query where state OR localGovt matches the search term
+  const stateSnapshot = await db.collection("restaurants")
+    .where("searchState", "==", searchTerm)
+    .get();
+  const lgaSnapshot = await db.collection("restaurants")
+    .where("searchLGA", "==", searchTerm)
+    .get();
+  
+  const map = new Map();
+  stateSnapshot.forEach(doc => map.set(doc.id, { id: doc.id, ...doc.data() }));
+  lgaSnapshot.forEach(doc => map.set(doc.id, { id: doc.id, ...doc.data() }));
+  
+  return Array.from(map.values());
+}
 async function notifyRestaurant(phone, message) {
   await client.messages.create({
     from: "whatsapp:+14155238886",
@@ -3336,11 +3352,35 @@ async function notifyCustomer(phone, message) {
   });
 }
 
-async function createPaymentLink(email, amount, metadata) {
+// async function createPaymentLink(email, amount, metadata) {
+//   try {
+//     const res = await axios.post(
+//       "https://api.paystack.co/transaction/initialize",
+//       { email, amount: amount * 100, metadata },
+//       { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET}` } }
+//     );
+//     return res.data.data.authorization_url;
+//   } catch (err) {
+//     console.log(err.response?.data || err.message);
+//     return null;
+//   }
+// }
+
+
+
+async function createPaymentLink(email, amount, metadata, callbackUrl = null) {
   try {
+    const payload = {
+      email,
+      amount: amount * 100,
+      metadata,
+    };
+    if (callbackUrl) {
+      payload.callback_url = callbackUrl;
+    }
     const res = await axios.post(
       "https://api.paystack.co/transaction/initialize",
-      { email, amount: amount * 100, metadata },
+      payload,
       { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET}` } }
     );
     return res.data.data.authorization_url;
@@ -3471,15 +3511,20 @@ app.post("/register-restaurant", async (req, res) => {
     }
 
     // Save restaurant to Firestore
-    await db.collection("restaurants").doc(restaurantId).set({
-      restaurantId, name, phone, state, localGovt,
-      address: location, deliveryFee: Number(deliveryFee),
-      apiKey,
-      referredBy,
-      referrerLevel,
-      referralPath,
-      createdAt: new Date()
-    });
+await db.collection("restaurants").doc(restaurantId).set({
+  restaurantId, name, phone, state, localGovt,
+  address: location,
+  searchState: state.toLowerCase(),
+  searchLGA: localGovt.toLowerCase(),
+  // keep area for backward compatibility if needed
+  area: state.toLowerCase(),
+  deliveryFee: Number(deliveryFee),
+  apiKey,
+  referredBy,
+  referrerLevel,
+  referralPath,
+  createdAt: new Date()
+});
 
     // Send WhatsApp notification – but don't let failure break registration
     try {
@@ -3756,10 +3801,24 @@ app.post("/webhook", async (req, res) => {
         status: "pending_payment",
         createdAt: new Date()
       });
-      const link = await createPaymentLink(
-        "user@email.com", pricing.customerPays,
-        { orderId, phone: from, restaurant: user.restaurant, cart: JSON.stringify(user.cart), address: user.address }
-      );
+      // const link = await createPaymentLink(
+      //   "user@email.com", pricing.customerPays,
+      //   { orderId, phone: from, restaurant: user.restaurant, cart: JSON.stringify(user.cart), address: user.address }
+      // );
+
+      const successUrl = `https://chowbot-kgdk.onrender.com/payment-success.html?orderId=${orderId}&phone=${encodeURIComponent(from)}`;
+const link = await createPaymentLink(
+  "user@email.com",
+  pricing.customerPays,
+  {
+    orderId,
+    phone: from,
+    restaurant: user.restaurant,
+    cart: JSON.stringify(user.cart),
+    address: user.address
+  },
+  successUrl   // pass callback URL
+);
       twiml.message(
         `🧾 ORDER SUMMARY\n\n${formatCartUI(user.cart)}\n\n` +
         `🏠 Delivery: ${user.address}\n🚚 Fee: ₦${pricing.serviceFee}\n💰 Total: ₦${pricing.customerPays}\n\n` +
@@ -3957,7 +4016,12 @@ app.post("/paystack/webhook", async (req, res) => {
     let msg = `📦 NEW PAID ORDER #${orderId.slice(-6)}\n\n`;
     order.cart.forEach(i => { msg += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`; });
     msg += `\n━━━━━━━━━━━━━━\n💰 Total: ₦${cartTotal}\n💸 Your Earnings: ₦${pricing.restaurantEarnings}\n🧾 Commission: ₦${pricing.commission}\nCustomer: ${order.phone}\nAddress: ${order.address}`;
-    await notifyRestaurant(restaurant.phone, msg);
+try {
+  await notifyRestaurant(restaurant.phone, msg);
+} catch (err) {
+  console.error("Failed to notify restaurant about order:", err.message);
+  // You could save to a "failed_notifications" collection for retry later
+}
     await notifyCustomer(order.phone, `✅ Payment received! Your order #${orderId.slice(-6)} has been confirmed. We'll notify you when it's being prepared.`);
 
     // Reset customer session after payment
