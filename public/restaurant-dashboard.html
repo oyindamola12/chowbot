@@ -66,7 +66,6 @@
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Update failed');
-            // Reload orders after successful update
             await loadOrders(apiKey);
         } catch (err) {
             showError(err.message);
@@ -89,18 +88,8 @@
     function renderDashboard(data) {
         const restaurant = data.restaurant;
         const orders = data.orders || [];
-        // Calculate earnings (sum of restaurantEarnings from each order)
         let totalEarnings = 0;
-        orders.forEach(o => {
-            if (o.restaurantEarnings) totalEarnings += o.restaurantEarnings;
-            else {
-                // Fallback: recompute roughly if not stored
-                const cartTotal = o.cartTotal || 0;
-                // crude approximation: restaurantEarnings ~ cartTotal - commission
-                // but we'd need pricing. Use stored value if exists
-                if (o.pricing && o.pricing.restaurantEarnings) totalEarnings += o.pricing.restaurantEarnings;
-            }
-        });
+        orders.forEach(o => { if (o.restaurantEarnings) totalEarnings += o.restaurantEarnings; });
 
         let html = `
             <div class="card">
@@ -124,28 +113,26 @@
             orders.forEach(order => {
                 const itemsList = order.cart?.map(i => `${i.name} x${i.qty}`).join(', ') || '-';
                 const statusClass = `status-${order.status || 'paid'}`;
-                let statusText = order.status || 'paid';
-                // Show action buttons only if not delivered
-                const canUpdate = statusText !== 'delivered';
+                const canUpdate = order.status !== 'delivered';
                 html += `
                     <tr>
                         <td>#${order.id.slice(-6)}</td>
                         <td>${order.phone}</td>
                         <td>${itemsList}</td>
                         <td>₦${order.cartTotal}</td>
-                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td><span class="badge ${statusClass}">${order.status || 'paid'}</span></td>
                         <td>${order.address || '-'}</td>
                         <td>${new Date(order.createdAt?.toDate()).toLocaleString()}</td>
                         <td>
                             ${canUpdate ? `
                                 <select id="status-${order.id}" class="status-select">
-                                    <option value="preparing" ${statusText === 'preparing' ? 'selected' : ''}>Preparing</option>
-                                    <option value="out_for_delivery" ${statusText === 'out_for_delivery' ? 'selected' : ''}>Out for delivery</option>
-                                    <option value="delivered" ${statusText === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                    <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>Preparing</option>
+                                    <option value="out_for_delivery" ${order.status === 'out_for_delivery' ? 'selected' : ''}>Out for delivery</option>
+                                    <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
                                 </select>
                                 <button class="status-btn" onclick="updateStatus('${restaurant.apiKey}', '${order.id}', document.getElementById('status-${order.id}').value, this)">Update</button>
                             ` : '✅ Completed'}
-                        </td>
+                         </td>
                     </tr>
                 `;
             });
@@ -159,7 +146,6 @@
         if (!apiKey) return showError('Please enter your API key');
         try {
             await loadOrders(apiKey);
-            // Store apiKey for later use in update buttons (global variable)
             window.currentApiKey = apiKey;
         } catch (err) {
             showError(err.message);
