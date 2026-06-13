@@ -295,6 +295,48 @@ function scrollToSignup() {
   document.getElementById("signup").scrollIntoView({ behavior: "smooth" });
 }
 
+// async function register() {
+//   const name = document.getElementById("name").value.trim();
+//   const phone = document.getElementById("phone").value.trim();
+//   const state = document.getElementById("stateSelect").value;
+//   const localGovt = document.getElementById("lgaSelect").value;
+//   const location = document.getElementById("location").value.trim();
+//   const fee = document.getElementById("fee").value.trim();
+//   const resultDiv = document.getElementById("result");
+
+//   if (!name || !phone || !state || !localGovt || !location || !fee) {
+//     resultDiv.innerHTML = "⚠️ All fields are required!";
+//     return;
+//   }
+
+//   resultDiv.innerHTML = "⏳ Registering...";
+
+//   try {
+//     const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ name, phone, state, localGovt, location, deliveryFee: fee })
+//     });
+//     const data = await res.json();
+//     if (data.success) {
+//       resultDiv.innerHTML = `
+//         ✅ Registered successfully!<br>
+//         <strong>Restaurant ID:</strong> ${data.restaurantId}<br>
+//         <strong>API Key:</strong> <code>${data.apiKey}</code><br><br>
+//         <a href="menu.html?apiKey=${data.apiKey}" style="display:inline-block; background:#ff5a3c; color:white; padding:10px 20px; border-radius:30px; text-decoration:none;">🍽 Manage Menu</a>
+//         <br><br>
+//         <a href="${data.whatsappLink}" target="_blank" style="color:#ff5a3c;">💬 Open WhatsApp Store</a>
+//       `;
+//     } else {
+//       resultDiv.innerHTML = `❌ ${data.message || "Registration failed"}`;
+//     }
+//   } catch (err) {
+//     console.error(err);
+//     resultDiv.innerHTML = "❌ Server error. Please try again.";
+//   }
+// }
+
+
 async function register() {
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
@@ -302,6 +344,7 @@ async function register() {
   const localGovt = document.getElementById("lgaSelect").value;
   const location = document.getElementById("location").value.trim();
   const fee = document.getElementById("fee").value.trim();
+  const referralCode = document.getElementById("referralCode").value.trim();
   const resultDiv = document.getElementById("result");
 
   if (!name || !phone || !state || !localGovt || !location || !fee) {
@@ -315,18 +358,24 @@ async function register() {
     const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone, state, localGovt, location, deliveryFee: fee })
+      body: JSON.stringify({
+        name, phone, state, localGovt, location,
+        deliveryFee: fee,
+        referralCode: referralCode || undefined
+      })
     });
     const data = await res.json();
     if (data.success) {
+      // Show success message with API key and auto-redirect
       resultDiv.innerHTML = `
-        ✅ Registered successfully!<br>
-        <strong>Restaurant ID:</strong> ${data.restaurantId}<br>
-        <strong>API Key:</strong> <code>${data.apiKey}</code><br><br>
-        <a href="menu.html?apiKey=${data.apiKey}" style="display:inline-block; background:#ff5a3c; color:white; padding:10px 20px; border-radius:30px; text-decoration:none;">🍽 Manage Menu</a>
-        <br><br>
-        <a href="${data.whatsappLink}" target="_blank" style="color:#ff5a3c;">💬 Open WhatsApp Store</a>
+        ✅ Registration successful!<br>
+        <strong>API Key:</strong> <code>${data.apiKey}</code><br>
+        Redirecting to menu manager...
       `;
+      // Auto-redirect after 3 seconds
+      setTimeout(() => {
+        window.location.href = `menu.html?apiKey=${data.apiKey}`;
+      }, 3000);
     } else {
       resultDiv.innerHTML = `❌ ${data.message || "Registration failed"}`;
     }
