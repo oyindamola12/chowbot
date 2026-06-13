@@ -3440,17 +3440,22 @@ async function creditWallet(phone, amount, description, orderId) {
 app.post("/register-restaurant", async (req, res) => {
   try {
     const { name, phone, state, localGovt, deliveryFee, location, referralCode } = req.body;
+
+    // Validation
     if (!name || !phone || !state || !localGovt || !deliveryFee || !location) {
       return res.json({ success: false, message: "Missing required fields" });
     }
+
+    // Check duplicate
     const existing = await db.collection("restaurants").where("phone", "==", phone).get();
     if (!existing.empty) {
       return res.json({ success: false, message: "⚠️ This WhatsApp number is already registered." });
     }
+
     const restaurantId = generateRestaurantId(name);
     const apiKey = generateApiKey();
 
-    // Process referral (optional)
+    // Process referral
     let referredBy = null;
     let referrerLevel = null;
     let referralPath = null;
@@ -3465,6 +3470,7 @@ app.post("/register-restaurant", async (req, res) => {
       }
     }
 
+    // Save restaurant to Firestore
     await db.collection("restaurants").doc(restaurantId).set({
       restaurantId, name, phone, state, localGovt,
       address: location, deliveryFee: Number(deliveryFee),
@@ -3475,17 +3481,28 @@ app.post("/register-restaurant", async (req, res) => {
       createdAt: new Date()
     });
 
-    // Send API key to restaurant via WhatsApp
-    await client.messages.create({
-      from: "whatsapp:+14155238886",
-      to: `whatsapp:${phone}`,
-      body: `✅ Welcome ${name}!\n\nRestaurant ID: ${restaurantId}\nAPI Key: ${apiKey}\n\nUse this API key to log into your dashboard: https://yourdomain.com/restaurant-dashboard.html\nKeep it secret!`
-    });
+    // Send WhatsApp notification – but don't let failure break registration
+    try {
+      await client.messages.create({
+        from: "whatsapp:+14155238886",
+        to: `whatsapp:${phone}`,
+        body: `✅ Welcome ${name}!\n\nRestaurant ID: ${restaurantId}\nAPI Key: ${apiKey}\n\nUse this API key to log into your dashboard.\nKeep it secret!`
+      });
+    } catch (twilioErr) {
+      console.error("Twilio error (non-fatal):", twilioErr.message);
+      // Continue – registration succeeded even if WhatsApp fails
+    }
 
-    res.json({ success: true, restaurantId, apiKey, whatsappLink: `https://wa.me/${phone}` });
+    // Always return success with apiKey
+    res.json({
+      success: true,
+      restaurantId,
+      apiKey,
+      whatsappLink: `https://wa.me/${phone}`
+    });
   } catch (err) {
-    console.error(err);
-    res.json({ success: false, message: "Server error" });
+    console.error("Registration error:", err);
+    res.json({ success: false, message: err.message || "Server error" });
   }
 });
 
