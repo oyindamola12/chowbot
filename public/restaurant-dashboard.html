@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Dashboard</title>
+    <style>
+        * { font-family: system-ui, -apple-system, 'Segoe UI', Roboto; box-sizing: border-box; }
+        body { background: #f1f5f9; margin: 0; padding: 24px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .card { background: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h1, h2, h3 { margin-top: 0; }
+        .login-area { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
+        .login-area input { padding: 12px 16px; border-radius: 40px; border: 1px solid #cbd5e1; min-width: 250px; }
+        .login-area button { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 40px; font-weight: 600; cursor: pointer; }
+        .error { background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 16px; margin-bottom: 16px; display: none; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        th { background: #f8fafc; }
+        .badge { padding: 4px 12px; border-radius: 30px; font-size: 12px; font-weight: 500; }
+        .status-paid { background: #dbeafe; color: #1e40af; }
+        .status-preparing { background: #fef3c7; color: #92400e; }
+        .status-out_for_delivery { background: #d1fae5; color: #065f46; }
+        .status-delivered { background: #e0e7ff; color: #3730a3; }
+        select, button.status-btn { padding: 6px 12px; border-radius: 30px; border: 1px solid #cbd5e1; background: white; cursor: pointer; }
+        button.status-btn { background: #3b82f6; color: white; border: none; margin-left: 8px; }
+        button.status-btn:hover { background: #2563eb; }
+        .summary { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+        .summary-card { background: #f1f5f9; border-radius: 20px; padding: 12px 20px; }
+        @media (max-width: 700px) { th, td { font-size: 12px; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1>🏪 Restaurant Dashboard</h1>
+        <div class="login-area">
+            <input type="text" id="apiKeyInput" placeholder="Enter your API Key" style="flex:2">
+            <button id="loginBtn">🔑 Load Orders</button>
+        </div>
+        <div id="errorMsg" class="error"></div>
+    </div>
+    <div id="content"></div>
+</div>
+
+<script>
+    const loginBtn = document.getElementById('loginBtn');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const errorDiv = document.getElementById('errorMsg');
+    const contentDiv = document.getElementById('content');
+
+    function showError(msg) {
+        errorDiv.innerText = msg;
+        errorDiv.style.display = 'block';
+        setTimeout(() => errorDiv.style.display = 'none', 5000);
+    }
+
+    async function updateStatus(apiKey, orderId, newStatus, button) {
+        button.disabled = true;
+        button.innerText = 'Updating...';
+        try {
+            const res = await fetch('/api/restaurant/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey, orderId, newStatus })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Update failed');
+            // Reload orders after successful update
+            await loadOrders(apiKey);
+        } catch (err) {
+            showError(err.message);
+            button.disabled = false;
+            button.innerText = 'Retry';
+        }
+    }
+
+    async function loadOrders(apiKey) {
+        const res = await fetch('/api/restaurant/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiKey })
+        });
+        if (!res.ok) throw new Error('Failed to load orders');
+        const data = await res.json();
+        renderDashboard(data);
+    }
+
+    function renderDashboard(data) {
+        const restaurant = data.restaurant;
+        const orders = data.orders || [];
+        // Calculate earnings (sum of restaurantEarnings from each order)
+        let totalEarnings = 0;
+        orders.forEach(o => {
+            if (o.restaurantEarnings) totalEarnings += o.restaurantEarnings;
+            else {
+                // Fallback: recompute roughly if not stored
+                const cartTotal = o.cartTotal || 0;
+                // crude approximation: restaurantEarnings ~ cartTotal - commission
+                // but we'd need pricing. Use stored value if exists
+                if (o.pricing && o.pricing.restaurantEarnings) totalEarnings += o.pricing.restaurantEarnings;
+            }
+        });
+
+        let html = `
+            <div class="card">
+                <h2>🍽️ ${restaurant.name}</h2>
+                <p>📞 ${restaurant.phone} | 🔑 API Key: ****${restaurant.apiKey?.slice(-6)}</p>
+                <div class="summary">
+                    <div class="summary-card">📦 Total Orders: ${orders.length}</div>
+                    <div class="summary-card">💰 Total Earnings: ₦${totalEarnings.toLocaleString()}</div>
+                </div>
+                <h3>📋 Orders</h3>
+                <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total (₦)</th><th>Status</th><th>Address</th><th>Date</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+        `;
+        if (orders.length === 0) {
+            html += `<tr><td colspan="8">No orders yet</td></tr>`;
+        } else {
+            orders.forEach(order => {
+                const itemsList = order.cart?.map(i => `${i.name} x${i.qty}`).join(', ') || '-';
+                const statusClass = `status-${order.status || 'paid'}`;
+                let statusText = order.status || 'paid';
+                // Show action buttons only if not delivered
+                const canUpdate = statusText !== 'delivered';
+                html += `
+                    <tr>
+                        <td>#${order.id.slice(-6)}</td>
+                        <td>${order.phone}</td>
+                        <td>${itemsList}</td>
+                        <td>₦${order.cartTotal}</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td>${order.address || '-'}</td>
+                        <td>${new Date(order.createdAt?.toDate()).toLocaleString()}</td>
+                        <td>
+                            ${canUpdate ? `
+                                <select id="status-${order.id}" class="status-select">
+                                    <option value="preparing" ${statusText === 'preparing' ? 'selected' : ''}>Preparing</option>
+                                    <option value="out_for_delivery" ${statusText === 'out_for_delivery' ? 'selected' : ''}>Out for delivery</option>
+                                    <option value="delivered" ${statusText === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                </select>
+                                <button class="status-btn" onclick="updateStatus('${restaurant.apiKey}', '${order.id}', document.getElementById('status-${order.id}').value, this)">Update</button>
+                            ` : '✅ Completed'}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        html += `</tbody></table></div></div>`;
+        contentDiv.innerHTML = html;
+    }
+
+    loginBtn.addEventListener('click', async () => {
+        const apiKey = apiKeyInput.value.trim();
+        if (!apiKey) return showError('Please enter your API key');
+        try {
+            await loadOrders(apiKey);
+            // Store apiKey for later use in update buttons (global variable)
+            window.currentApiKey = apiKey;
+        } catch (err) {
+            showError(err.message);
+        }
+    });
+</script>
+</body>
+</html>

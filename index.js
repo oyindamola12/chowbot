@@ -3039,9 +3039,11 @@ app.post("/paystack/webhook", async (req, res) => {
       ...order,
       paymentStatus: "paid",
       status: "paid",
+      restaurantEarnings: pricing.restaurantEarnings,   // <-- add this line
       createdAt: new Date(),
       address: order.address || "Not provided"
     });
+
     await orderRef.delete();
     let msg = `📦 NEW PAID ORDER #${orderId.slice(-6)}\n\n`;
     order.cart.forEach(i => { msg += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`; });
@@ -3055,6 +3057,122 @@ app.post("/paystack/webhook", async (req, res) => {
   }
 });
 
+
+// =========================
+// 📦 RESTAURANT DASHBOARD: UPDATE ORDER STATUS
+// =========================
+// =========================
+// 📊 RESTAURANT DASHBOARD: GET ORDERS
+// =========================
+app.post("/api/restaurant/orders", async (req, res) => {
+  try {
+    const { apiKey } = req.body;
+    if (!apiKey) return res.status(400).json({ error: "Missing apiKey" });
+
+    // Find restaurant by apiKey
+    const restaurantQuery = await db.collection("restaurants").where("apiKey", "==", apiKey).limit(1).get();
+    if (restaurantQuery.empty) {
+      return res.status(401).json({ error: "Invalid API key" });
+    }
+    const restaurant = restaurantQuery.docs[0].data();
+
+    // Get all orders for this restaurant
+    const ordersSnapshot = await db.collection("orders")
+      .where("restaurant", "==", restaurant.restaurantId)
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const orders = ordersSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    res.json({
+      restaurant: {
+        name: restaurant.name,
+        phone: restaurant.phone,
+        apiKey: restaurant.apiKey,
+        restaurantId: restaurant.restaurantId
+      },
+      orders
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// =========================
+// 📦 RESTAURANT DASHBOARD: UPDATE ORDER STATUS
+// =========================
+app.post("/api/restaurant/update-status", async (req, res) => {
+  try {
+    const { apiKey, orderId, newStatus } = req.body;
+    if (!apiKey || !orderId || !newStatus) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+    const validStatuses = ["preparing", "out_for_delivery", "delivered"];
+    if (!validStatuses.includes(newStatus)) {
+      return res.status(400).json({ error: "Invalid status" });
+    }
+    // Verify restaurant
+    const restaurantQuery = await db.collection("restaurants").where("apiKey", "==", apiKey).limit(1).get();
+    if (restaurantQuery.empty) {
+      return res.status(401).json({ error: "Invalid API key" });
+    }
+    const restaurant = restaurantQuery.docs[0].data();
+    // Get order
+    const orderRef = db.collection("orders").doc(orderId);
+    const orderSnap = await orderRef.get();
+    if (!orderSnap.exists) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    const order = orderSnap.data();
+    if (order.restaurant !== restaurant.restaurantId) {
+      return res.status(403).json({ error: "Order does not belong to you" });
+    }
+    // Update status
+    await orderRef.update({ status: newStatus, updatedAt: new Date() });
+    
+    // Notify customer via WhatsApp
+    const customerPhone = order.phone;
+    let customerMsg = "";
+    if (newStatus === "preparing") customerMsg = "👨‍🍳 Your order is being prepared.";
+    else if (newStatus === "out_for_delivery") customerMsg = "🛵 Your order is out for delivery!";
+    else if (newStatus === "delivered") customerMsg = "✅ Your order has been delivered. Enjoy your meal!";
+    
+    // Use notifyCustomer if defined (from previous code)
+    if (typeof notifyCustomer === 'function') {
+      await notifyCustomer(customerPhone, `Order #${orderId.slice(-6)}: ${customerMsg}`);
+    } else {
+      // Fallback: send via Twilio directly
+      await client.messages.create({
+        from: "whatsapp:+14155238886",
+        to: customerPhone,
+        body: `Order #${orderId.slice(-6)}: ${customerMsg}`,
+      });
+    }
+    
+    // If delivered, also notify restaurant with final confirmation
+    if (newStatus === "delivered") {
+      const restaurantMsg = `✅ Order #${orderId.slice(-6)} has been successfully delivered to the customer. Thank you for using our platform!`;
+      if (typeof notifyRestaurant === 'function') {
+        await notifyRestaurant(restaurant.phone, restaurantMsg);
+      } else {
+        await client.messages.create({
+          from: "whatsapp:+14155238886",
+          to: `whatsapp:${restaurant.phone}`,
+          body: restaurantMsg,
+        });
+      }
+    }
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 // =========================
 // 🚀 START SERVER
 // =========================
