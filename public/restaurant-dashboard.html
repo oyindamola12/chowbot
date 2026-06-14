@@ -1,389 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ChowBot – WhatsApp Food Ordering</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
-}
-
-body {
-  background: #fffaf5;
-  color: #1e293b;
-}
-
-/* NAVBAR */
-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 40px;
-  background: white;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-nav h2 {
-  color: #ff5a3c;
-  font-size: 1.6rem;
-}
-nav button {
-  background: #ff5a3c;
-  color: white;
-  border: none;
-  padding: 10px 24px;
-  border-radius: 30px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.2s;
-}
-nav button:hover {
-  background: #e04e2e;
-}
-
-/* HERO */
-.hero {
-  height: 90vh;
-  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("https://images.unsplash.com/photo-1600891964599-f61ba0e24092") center/cover;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: white;
-}
-.hero h1 {
-  font-size: 48px;
-  font-weight: 700;
-}
-.hero p {
-  margin-top: 12px;
-  font-size: 18px;
-}
-.hero button {
-  margin-top: 24px;
-  padding: 14px 28px;
-  border: none;
-  background: #ff5a3c;
-  color: white;
-  border-radius: 40px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-/* SECTIONS */
-.section {
-  padding: 80px 40px;
-  text-align: center;
-}
-.section h2 {
-  font-size: 32px;
-  margin-bottom: 20px;
-}
-.features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 30px;
-  margin-top: 40px;
-}
-.card {
-  background: white;
-  padding: 24px;
-  border-radius: 24px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-  transition: 0.2s;
-}
-.card img {
-  width: 100%;
-  border-radius: 16px;
-  height: 180px;
-  object-fit: cover;
-}
-.card h3 {
-  margin: 15px 0 8px;
-}
-.food-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 24px;
-  margin-top: 40px;
-}
-.food-item {
-  background: white;
-  padding: 12px;
-  border-radius: 20px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-}
-.food-item img {
-  width: 100%;
-  border-radius: 14px;
-  height: 140px;
-  object-fit: cover;
-}
-
-/* SIGNUP FORM */
-.signup {
-  background: #fff0e6;
-  padding: 60px 40px;
-  border-radius: 40px 40px 0 0;
-}
-.signup h2 {
-  text-align: center;
-  margin-bottom: 30px;
-}
-.signup-form {
-  max-width: 600px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.signup-form input, .signup-form select {
-  width: 100%;
-  padding: 14px 18px;
-  border: 1px solid #ddd;
-  border-radius: 30px;
-  font-size: 15px;
-  background: white;
-}
-.signup-form button {
-  background: #ff5a3c;
-  color: white;
-  border: none;
-  padding: 14px;
-  border-radius: 30px;
-  font-weight: 600;
-  font-size: 16px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.signup-form button:hover {
-  background: #e04e2e;
-}
-.result {
-  margin-top: 20px;
-  text-align: center;
-  font-weight: 500;
-}
-
-/* FOOTER */
-footer {
-  text-align: center;
-  padding: 24px;
-  background: #1e1e2a;
-  color: #ccc;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Dashboard</title>
+    <style>
+        * { font-family: system-ui, -apple-system, 'Segoe UI', Roboto; box-sizing: border-box; }
+        body { background: #f1f5f9; margin: 0; padding: 24px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .card { background: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h1, h2, h3 { margin-top: 0; }
+        .login-area { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
+        .login-area input { padding: 12px 16px; border-radius: 40px; border: 1px solid #cbd5e1; min-width: 250px; }
+        .login-area button { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 40px; font-weight: 600; cursor: pointer; }
+        .error { background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 16px; margin-bottom: 16px; display: none; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        th { background: #f8fafc; }
+        .badge { padding: 4px 12px; border-radius: 30px; font-size: 12px; font-weight: 500; }
+        .status-paid { background: #dbeafe; color: #1e40af; }
+        .status-preparing { background: #fef3c7; color: #92400e; }
+        .status-out_for_delivery { background: #d1fae5; color: #065f46; }
+        .status-delivered { background: #e0e7ff; color: #3730a3; }
+        select, button.status-btn { padding: 6px 12px; border-radius: 30px; border: 1px solid #cbd5e1; background: white; cursor: pointer; }
+        button.status-btn { background: #3b82f6; color: white; border: none; margin-left: 8px; }
+        button.status-btn:hover { background: #2563eb; }
+        .summary { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+        .summary-card { background: #f1f5f9; border-radius: 20px; padding: 12px 20px; }
+        @media (max-width: 700px) { th, td { font-size: 12px; } }
+    </style>
 </head>
-
 <body>
-
-<nav>
-  <h2>🍽 ChowBot</h2>
-  <button onclick="scrollToSignup()">Join as Restaurant</button>
-</nav>
-
-<section class="hero">
-  <div>
-    <h1>Order Food on WhatsApp</h1>
-    <p>No apps. No stress. Just chat and eat.</p>
-    <button onclick="scrollToSignup()">Get Started</button>
-  </div>
-</section>
-
-<section class="section">
-  <h2>How It Works</h2>
-  <div class="features">
+<div class="container">
     <div class="card">
-      <img src="https://images.unsplash.com/photo-1606787366850-de6330128bfc" alt="QR">
-      <h3>1. Scan QR</h3>
-      <p>Customers scan your QR code</p>
+        <h1>🏪 Restaurant Dashboard</h1>
+        <div class="login-area">
+            <input type="text" id="apiKeyInput" placeholder="Enter your API Key" style="flex:2">
+            <button id="loginBtn">🔑 Load Orders</button>
+        </div>
+        <div id="errorMsg" class="error"></div>
     </div>
-    <div class="card">
-      <img src="https://images.unsplash.com/photo-1581291518857-4e27b48ff24e" alt="Chatbot">
-      <h3>2. Chatbot Orders</h3>
-      <p>They order directly on WhatsApp</p>
-    </div>
-    <div class="card">
-      <img src="https://images.unsplash.com/photo-1594007654729-407eedc4be65" alt="Delivery">
-      <h3>3. Delivery</h3>
-      <p>We assign riders automatically</p>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <h2>Popular Meals</h2>
-  <div class="food-grid">
-    <div class="food-item"><img src="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d"><p>Jollof Rice</p></div>
-    <div class="food-item"><img src="https://images.unsplash.com/photo-1598515214211-89d3c73ae83b"><p>Pizza</p></div>
-    <div class="food-item"><img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1"><p>Grilled Chicken</p></div>
-    <div class="food-item"><img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c"><p>Salads</p></div>
-  </div>
-</section>
-
-<section class="signup" id="signup">
-  <h2>Restaurant Signup</h2>
-  <div class="signup-form">
-    <input id="name" placeholder="Restaurant Name">
-    <input id="phone" placeholder="WhatsApp Number (e.g., 234XXXXXXXXX)">
-    <select id="stateSelect">
-      <option value="">Select State</option>
-      <option value="abia">Abia</option><option value="adamawa">Adamawa</option><option value="akwa-ibom">Akwa Ibom</option>
-      <option value="anambra">Anambra</option><option value="bauchi">Bauchi</option><option value="bayelsa">Bayelsa</option>
-      <option value="benue">Benue</option><option value="borno">Borno</option><option value="cross-river">Cross River</option>
-      <option value="delta">Delta</option><option value="ebonyi">Ebonyi</option><option value="edo">Edo</option>
-      <option value="ekiti">Ekiti</option><option value="enugu">Enugu</option><option value="gombe">Gombe</option>
-      <option value="imo">Imo</option><option value="jigawa">Jigawa</option><option value="kaduna">Kaduna</option>
-      <option value="kano">Kano</option><option value="katsina">Katsina</option><option value="kebbi">Kebbi</option>
-      <option value="kogi">Kogi</option><option value="kwara">Kwara</option><option value="lagos">Lagos</option>
-      <option value="nasarawa">Nasarawa</option><option value="niger">Niger</option><option value="ogun">Ogun</option>
-      <option value="ondo">Ondo</option><option value="osun">Osun</option><option value="oyo">Oyo</option>
-      <option value="plateau">Plateau</option><option value="rivers">Rivers</option><option value="sokoto">Sokoto</option>
-      <option value="taraba">Taraba</option><option value="yobe">Yobe</option><option value="zamfara">Zamfara</option>
-      <option value="fct">FCT (Abuja)</option>
-    </select>
-    <select id="lgaSelect">
-      <option value="">Select LGA</option>
-    </select>
-    <input id="location" placeholder="Full address">
-    <input id="fee" placeholder="Delivery Fee (₦)" type="number">
-    <button onclick="register()">Register Restaurant</button>
-  </div>
-  <div id="result" class="result"></div>
-</section>
-
-<footer>
-  © 2026 ChowBot — Built for Africa 🚀
-</footer>
+    <div id="content"></div>
+</div>
 
 <script>
-// LGA DATA (same as your original, shortened for brevity – include full object)
-const lgaData = {
-  lagos: ["Agege","Ajeromi-Ifelodun","Alimosho","Amuwo-Odofin","Apapa","Badagry","Epe","Eti-Osa","Ibeju/Lekki","Ifako-Ijaye","Ikeja","Ikorodu","Kosofe","Lagos Island","Lagos Mainland","Mushin","Ojo","Oshodi-Isolo","Shomolu","Surulere"],
-  abia: ["Aba North","Aba South","Arochukwu","Bende","Ikwuano","Isiala-Ngwa North","Isiala-Ngwa South","Isuikwato","Obi Nwa","Ohafia","Osisioma","Ngwa","Ugwunagbo","Ukwa East","Ukwa West","Umuahia North","Umuahia South","Umu-Neochi"],
-  // Add other states as needed (you can keep your full lgaData object from original)
-};
-// For demonstration, I'll include a fallback – but you should copy your full lgaData.
-// For brevity, I'll assume you'll paste your full lgaData here. 
-// You can copy the entire lgaData object from your original code.
+    const loginBtn = document.getElementById('loginBtn');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const errorDiv = document.getElementById('errorMsg');
+    const contentDiv = document.getElementById('content');
 
-// Populate LGA on state change
-document.getElementById("stateSelect").addEventListener("change", function() {
-  const state = this.value;
-  const lgaSelect = document.getElementById("lgaSelect");
-  lgaSelect.innerHTML = '<option value="">Select LGA</option>';
-  if (!state || !lgaData[state]) return;
-  lgaData[state].forEach(lga => {
-    const opt = document.createElement("option");
-    opt.value = lga.toLowerCase().replace(/\s/g, "-");
-    opt.textContent = lga;
-    lgaSelect.appendChild(opt);
-  });
-});
-
-function scrollToSignup() {
-  document.getElementById("signup").scrollIntoView({ behavior: "smooth" });
-}
-
-// async function register() {
-//   const name = document.getElementById("name").value.trim();
-//   const phone = document.getElementById("phone").value.trim();
-//   const state = document.getElementById("stateSelect").value;
-//   const localGovt = document.getElementById("lgaSelect").value;
-//   const location = document.getElementById("location").value.trim();
-//   const fee = document.getElementById("fee").value.trim();
-//   const resultDiv = document.getElementById("result");
-
-//   if (!name || !phone || !state || !localGovt || !location || !fee) {
-//     resultDiv.innerHTML = "⚠️ All fields are required!";
-//     return;
-//   }
-
-//   resultDiv.innerHTML = "⏳ Registering...";
-
-//   try {
-//     const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ name, phone, state, localGovt, location, deliveryFee: fee })
-//     });
-//     const data = await res.json();
-//     if (data.success) {
-//       resultDiv.innerHTML = `
-//         ✅ Registered successfully!<br>
-//         <strong>Restaurant ID:</strong> ${data.restaurantId}<br>
-//         <strong>API Key:</strong> <code>${data.apiKey}</code><br><br>
-//         <a href="menu.html?apiKey=${data.apiKey}" style="display:inline-block; background:#ff5a3c; color:white; padding:10px 20px; border-radius:30px; text-decoration:none;">🍽 Manage Menu</a>
-//         <br><br>
-//         <a href="${data.whatsappLink}" target="_blank" style="color:#ff5a3c;">💬 Open WhatsApp Store</a>
-//       `;
-//     } else {
-//       resultDiv.innerHTML = `❌ ${data.message || "Registration failed"}`;
-//     }
-//   } catch (err) {
-//     console.error(err);
-//     resultDiv.innerHTML = "❌ Server error. Please try again.";
-//   }
-// }
-
-
-async function register() {
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const state = document.getElementById("stateSelect").value;
-  const localGovt = document.getElementById("lgaSelect").value;
-  const location = document.getElementById("location").value.trim();
-  const fee = document.getElementById("fee").value.trim();
-  const referralCode = document.getElementById("referralCode").value.trim();
-  const resultDiv = document.getElementById("result");
-
-  if (!name || !phone || !state || !localGovt || !location || !fee) {
-    resultDiv.innerHTML = "⚠️ All fields are required!";
-    return;
-  }
-
-  resultDiv.innerHTML = "⏳ Registering...";
-
-  try {
-    const res = await fetch("https://chowbot-kgdk.onrender.com/register-restaurant", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name, phone, state, localGovt, location,
-        deliveryFee: fee,
-        referralCode: referralCode || undefined
-      })
-    });
-    const data = await res.json();
-    if (data.success) {
-      // Show success message with API key and auto-redirect
-      resultDiv.innerHTML = `
-        ✅ Registration successful!<br>
-        <strong>API Key:</strong> <code>${data.apiKey}</code><br>
-        Redirecting to menu manager...
-      `;
-      // Auto-redirect after 3 seconds
-      setTimeout(() => {
-        window.location.href = `menu.html?apiKey=${data.apiKey}`;
-      }, 3000);
-    } else {
-      resultDiv.innerHTML = `❌ ${data.message || "Registration failed"}`;
+    function showError(msg) {
+        errorDiv.innerText = msg;
+        errorDiv.style.display = 'block';
+        setTimeout(() => errorDiv.style.display = 'none', 5000);
     }
-  } catch (err) {
-    console.error(err);
-    resultDiv.innerHTML = "❌ Server error. Please try again.";
-  }
-}
+
+    async function updateStatus(apiKey, orderId, newStatus, button) {
+        button.disabled = true;
+        button.innerText = 'Updating...';
+        try {
+            const res = await fetch('/api/restaurant/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey, orderId, newStatus })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Update failed');
+            // Reload orders after successful update
+            await loadOrders(apiKey);
+        } catch (err) {
+            showError(err.message);
+            button.disabled = false;
+            button.innerText = 'Retry';
+        }
+    }
+
+    async function loadOrders(apiKey) {
+        const res = await fetch('/api/restaurant/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiKey })
+        });
+        if (!res.ok) throw new Error('Failed to load orders');
+        const data = await res.json();
+        renderDashboard(data);
+    }
+
+    function renderDashboard(data) {
+        const restaurant = data.restaurant;
+        const orders = data.orders || [];
+        // Calculate earnings (sum of restaurantEarnings from each order)
+        let totalEarnings = 0;
+        orders.forEach(o => {
+            if (o.restaurantEarnings) totalEarnings += o.restaurantEarnings;
+            else {
+                // Fallback: recompute roughly if not stored
+                const cartTotal = o.cartTotal || 0;
+                // crude approximation: restaurantEarnings ~ cartTotal - commission
+                // but we'd need pricing. Use stored value if exists
+                if (o.pricing && o.pricing.restaurantEarnings) totalEarnings += o.pricing.restaurantEarnings;
+            }
+        });
+
+        let html = `
+            <div class="card">
+                <h2>🍽️ ${restaurant.name}</h2>
+                <p>📞 ${restaurant.phone} | 🔑 API Key: ****${restaurant.apiKey?.slice(-6)}</p>
+                <div class="summary">
+                    <div class="summary-card">📦 Total Orders: ${orders.length}</div>
+                    <div class="summary-card">💰 Total Earnings: ₦${totalEarnings.toLocaleString()}</div>
+                </div>
+                <h3>📋 Orders</h3>
+                <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total (₦)</th><th>Status</th><th>Address</th><th>Date</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+        `;
+        if (orders.length === 0) {
+            html += `<tr><td colspan="8">No orders yet</td></tr>`;
+        } else {
+            orders.forEach(order => {
+                const itemsList = order.cart?.map(i => `${i.name} x${i.qty}`).join(', ') || '-';
+                const statusClass = `status-${order.status || 'paid'}`;
+                let statusText = order.status || 'paid';
+                // Show action buttons only if not delivered
+                const canUpdate = statusText !== 'delivered';
+                html += `
+                    <tr>
+                        <td>#${order.id.slice(-6)}</td>
+                        <td>${order.phone}</td>
+                        <td>${itemsList}</td>
+                        <td>₦${order.cartTotal}</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td>${order.address || '-'}</td>
+                        <td>${new Date(order.createdAt?.toDate()).toLocaleString()}</td>
+                        <td>
+                            ${canUpdate ? `
+                                <select id="status-${order.id}" class="status-select">
+                                    <option value="preparing" ${statusText === 'preparing' ? 'selected' : ''}>Preparing</option>
+                                    <option value="out_for_delivery" ${statusText === 'out_for_delivery' ? 'selected' : ''}>Out for delivery</option>
+                                    <option value="delivered" ${statusText === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                </select>
+                                <button class="status-btn" onclick="updateStatus('${restaurant.apiKey}', '${order.id}', document.getElementById('status-${order.id}').value, this)">Update</button>
+                            ` : '✅ Completed'}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        html += `</tbody></table></div></div>`;
+        contentDiv.innerHTML = html;
+    }
+
+    loginBtn.addEventListener('click', async () => {
+        const apiKey = apiKeyInput.value.trim();
+        if (!apiKey) return showError('Please enter your API key');
+        try {
+            await loadOrders(apiKey);
+            // Store apiKey for later use in update buttons (global variable)
+            window.currentApiKey = apiKey;
+        } catch (err) {
+            showError(err.message);
+        }
+    });
 </script>
 </body>
 </html>
