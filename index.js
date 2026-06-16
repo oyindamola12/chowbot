@@ -3913,46 +3913,32 @@ const link = await createPaymentLink(
 // 📊 RESTAURANT DASHBOARD API ENDPOINTS
 // =========================
 
-// app.post("/api/restaurant/orders", async (req, res) => {
-//   try {
-//     const { apiKey } = req.body;
-//     if (!apiKey) return res.status(400).json({ error: "Missing apiKey" });
-//     const restaurantQuery = await db.collection("restaurants").where("apiKey", "==", apiKey).limit(1)
-//     .get();
-//     if (restaurantQuery.empty) return res.status(401).json({ error: "Invalid API key" });
-//     const restaurant = restaurantQuery.docs[0].data();
-//     const ordersSnapshot = await db.collection("orders")
-//       .where("restaurant", "==", restaurant.restaurantId)
-//       .orderBy("createdAt", "desc")
-//       .get();
-//     const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-//     res.json({ restaurant: { name: restaurant.name, phone: restaurant.phone, apiKey: restaurant.apiKey }, orders });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
 app.post("/api/restaurant/orders", async (req, res) => {
   try {
     const { apiKey } = req.body;
     if (!apiKey) return res.status(400).json({ error: "Missing apiKey" });
-
     const restaurantQuery = await db.collection("restaurants").where("apiKey", "==", apiKey).limit(1).get();
-    if (restaurantQuery.empty) {
-      return res.status(401).json({ error: "Invalid API key" });
-    }
+    if (restaurantQuery.empty) return res.status(401).json({ error: "Invalid API key" });
     const restaurant = restaurantQuery.docs[0].data();
-
     const ordersSnapshot = await db.collection("orders")
       .where("restaurant", "==", restaurant.restaurantId)
       .orderBy("createdAt", "desc")
       .get();
-
-    const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const orders = ordersSnapshot.docs.map(doc => {
+      const data = doc.data();
+      // Convert Firestore Timestamp to ISO string
+      if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+        data.createdAt = data.createdAt.toDate().toISOString();
+      }
+      // Also convert updatedAt if present
+      if (data.updatedAt && typeof data.updatedAt.toDate === 'function') {
+        data.updatedAt = data.updatedAt.toDate().toISOString();
+      }
+      return { id: doc.id, ...data };
+    });
     res.json({ restaurant: { name: restaurant.name, phone: restaurant.phone, apiKey: restaurant.apiKey }, orders });
   } catch (err) {
-    console.error("Error in /api/restaurant/orders:", err);
+    console.error(err);
     res.status(500).json({ error: "Server error: " + err.message });
   }
 });
