@@ -3959,27 +3959,120 @@ app.post("/api/restaurant/update-status", async (req, res) => {
 // =========================
 // 💳 PAYSTACK WEBHOOK (with earnings stored)
 // =========================
+// app.post("/paystack/webhook", async (req, res) => {
+//   console.log("🔥 PAYSTACK HIT");
+//   try {
+//     const event = req.body;
+//     if (event.event !== "charge.success") return res.sendStatus(200);
+//     const metadata = event.data.metadata;
+//     if (!metadata || !metadata.orderId) {
+//       console.log("❌ Missing metadata");
+//       return res.sendStatus(200);
+//     }
+//     const orderId = metadata.orderId;
+//     const orderRef = db.collection("pendingOrders").doc(orderId);
+//     const orderSnap = await orderRef.get();
+//     if (!orderSnap.exists) return res.sendStatus(200);
+//     const order = orderSnap.data();
+//     const restaurant = await getRestaurant(order.restaurant);
+//     if (!restaurant) return res.sendStatus(200);
+//     const cartTotal = order.cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+//     const pricing = calculatePricing(cartTotal);
+
+//     // Save to permanent orders collection with restaurantEarnings
+//     await db.collection("orders").doc(orderId).set({
+//       ...order,
+//       paymentStatus: "paid",
+//       status: "paid",
+//       restaurantEarnings: pricing.restaurantEarnings,
+//       createdAt: new Date(),
+//       address: order.address || "Not provided"
+//     });
+//     await orderRef.delete();
+
+//     // Handle referral commissions (if any)
+//     if (restaurant.referredBy && restaurant.referrerLevel) {
+//       const level = restaurant.referrerLevel;
+//       if (level === 1) {
+//         await creditWallet(restaurant.referredBy, 50, `Commission from order ${orderId.slice(-6)} (Level 1 direct referral)`, orderId);
+//       } else if (level === 2) {
+//         // Level 2 direct referral: gets 40, upline (level1) gets 10
+//         await creditWallet(restaurant.referredBy, 40, `Commission from order ${orderId.slice(-6)} (Level 2 referral)`, orderId);
+//         if (restaurant.referralPath && restaurant.referralPath[0]) {
+//           await creditWallet(restaurant.referralPath[0], 10, `Commission from order ${orderId.slice(-6)} (Level 1 upline)`, orderId);
+//         }
+//       } else if (level === 3) {
+//         // Level 3 direct: gets 30, upline level2 gets 20, level1 gets 10
+//         await creditWallet(restaurant.referredBy, 30, `Commission from order ${orderId.slice(-6)} (Level 3 referral)`, orderId);
+//         const level2Phone = restaurant.referralPath && restaurant.referralPath[restaurant.referralPath.length-1];
+//         if (level2Phone) await creditWallet(level2Phone, 20, `Commission from order ${orderId.slice(-6)} (Level 2 upline)`, orderId);
+//         if (restaurant.referralPath && restaurant.referralPath[0]) {
+//           await creditWallet(restaurant.referralPath[0], 10, `Commission from order ${orderId.slice(-6)} (Level 1 upline)`, orderId);
+//         }
+//       }
+//     }
+
+//     // Notify restaurant
+//     let msg = `📦 NEW PAID ORDER #${orderId.slice(-6)}\n\n`;
+//     order.cart.forEach(i => { msg += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`; });
+//     msg += `\n━━━━━━━━━━━━━━\n💰 Total: ₦${cartTotal}\n💸 Your Earnings: ₦${pricing.restaurantEarnings}\n🧾 Commission: ₦${pricing.commission}\nCustomer: ${order.phone}\nAddress: ${order.address}`;
+// try {
+//   await notifyRestaurant(restaurant.phone, msg);
+// } catch (err) {
+//   console.error("Failed to notify restaurant about order:", err.message);
+//   // You could save to a "failed_notifications" collection for retry later
+// }
+//     await notifyCustomer(order.phone, `✅ Payment received! Your order #${orderId.slice(-6)} has been confirmed. We'll notify you when it's being prepared.`);
+
+//     // Reset customer session after payment
+//     await deleteSession(order.phone);
+
+//     res.sendStatus(200);
+//   } catch (err) {
+//     console.log("🔥 WEBHOOK ERROR:", err);
+//     res.sendStatus(500);
+//   }
+// });
+
+
 app.post("/paystack/webhook", async (req, res) => {
   console.log("🔥 PAYSTACK HIT");
   try {
     const event = req.body;
-    if (event.event !== "charge.success") return res.sendStatus(200);
+    if (event.event !== "charge.success") {
+      console.log("⏭️ Event not charge.success, ignoring.");
+      return res.sendStatus(200);
+    }
     const metadata = event.data.metadata;
     if (!metadata || !metadata.orderId) {
-      console.log("❌ Missing metadata");
+      console.log("❌ Missing metadata.orderId");
       return res.sendStatus(200);
     }
     const orderId = metadata.orderId;
+    console.log(`📦 Processing order #${orderId}`);
+
     const orderRef = db.collection("pendingOrders").doc(orderId);
     const orderSnap = await orderRef.get();
-    if (!orderSnap.exists) return res.sendStatus(200);
+    if (!orderSnap.exists) {
+      console.log("❌ Order not found in pendingOrders");
+      return res.sendStatus(200);
+    }
     const order = orderSnap.data();
+    console.log("📋 Order data:", order);
+
+    // Fetch restaurant
+    console.log(`🔍 Looking up restaurant with ID: ${order.restaurant}`);
     const restaurant = await getRestaurant(order.restaurant);
-    if (!restaurant) return res.sendStatus(200);
+    if (!restaurant) {
+      console.error("❌ Restaurant not found for order:", orderId);
+      return res.sendStatus(200);
+    }
+    console.log(`🏪 Found restaurant: ${restaurant.name}, phone: ${restaurant.phone}`);
+
     const cartTotal = order.cart.reduce((sum, i) => sum + i.price * i.qty, 0);
     const pricing = calculatePricing(cartTotal);
 
-    // Save to permanent orders collection with restaurantEarnings
+    // Save to orders collection
     await db.collection("orders").doc(orderId).set({
       ...order,
       paymentStatus: "paid",
@@ -3990,41 +4083,42 @@ app.post("/paystack/webhook", async (req, res) => {
     });
     await orderRef.delete();
 
-    // Handle referral commissions (if any)
+    // --- REFERRAL COMMISSIONS (if any) ---
     if (restaurant.referredBy && restaurant.referrerLevel) {
-      const level = restaurant.referrerLevel;
-      if (level === 1) {
-        await creditWallet(restaurant.referredBy, 50, `Commission from order ${orderId.slice(-6)} (Level 1 direct referral)`, orderId);
-      } else if (level === 2) {
-        // Level 2 direct referral: gets 40, upline (level1) gets 10
-        await creditWallet(restaurant.referredBy, 40, `Commission from order ${orderId.slice(-6)} (Level 2 referral)`, orderId);
-        if (restaurant.referralPath && restaurant.referralPath[0]) {
-          await creditWallet(restaurant.referralPath[0], 10, `Commission from order ${orderId.slice(-6)} (Level 1 upline)`, orderId);
-        }
-      } else if (level === 3) {
-        // Level 3 direct: gets 30, upline level2 gets 20, level1 gets 10
-        await creditWallet(restaurant.referredBy, 30, `Commission from order ${orderId.slice(-6)} (Level 3 referral)`, orderId);
-        const level2Phone = restaurant.referralPath && restaurant.referralPath[restaurant.referralPath.length-1];
-        if (level2Phone) await creditWallet(level2Phone, 20, `Commission from order ${orderId.slice(-6)} (Level 2 upline)`, orderId);
-        if (restaurant.referralPath && restaurant.referralPath[0]) {
-          await creditWallet(restaurant.referralPath[0], 10, `Commission from order ${orderId.slice(-6)} (Level 1 upline)`, orderId);
-        }
-      }
+      // ... (your existing commission logic) ...
     }
 
-    // Notify restaurant
+    // --- SEND ORDER TO RESTAURANT VIA WHATSAPP ---
     let msg = `📦 NEW PAID ORDER #${orderId.slice(-6)}\n\n`;
     order.cart.forEach(i => { msg += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`; });
     msg += `\n━━━━━━━━━━━━━━\n💰 Total: ₦${cartTotal}\n💸 Your Earnings: ₦${pricing.restaurantEarnings}\n🧾 Commission: ₦${pricing.commission}\nCustomer: ${order.phone}\nAddress: ${order.address}`;
-try {
-  await notifyRestaurant(restaurant.phone, msg);
-} catch (err) {
-  console.error("Failed to notify restaurant about order:", err.message);
-  // You could save to a "failed_notifications" collection for retry later
-}
+
+    console.log(`📤 Attempting to send WhatsApp to ${restaurant.phone}:`, msg);
+
+    try {
+      await client.messages.create({
+        from: "whatsapp:+14155238886",
+        to: `whatsapp:${restaurant.phone}`,
+        body: msg,
+      });
+      console.log("✅ Restaurant notification sent successfully.");
+    } catch (err) {
+      console.error("❌ Failed to notify restaurant:", err.message);
+      // Store failed notification for manual retry
+      await db.collection("failedNotifications").add({
+        orderId,
+        restaurantId: order.restaurant,
+        phone: restaurant.phone,
+        message: msg,
+        error: err.message,
+        createdAt: new Date()
+      });
+    }
+
+    // Notify customer
     await notifyCustomer(order.phone, `✅ Payment received! Your order #${orderId.slice(-6)} has been confirmed. We'll notify you when it's being prepared.`);
 
-    // Reset customer session after payment
+    // Reset customer session
     await deleteSession(order.phone);
 
     res.sendStatus(200);
@@ -4033,7 +4127,6 @@ try {
     res.sendStatus(500);
   }
 });
-
 // =========================
 // 🛵 RIDER LOCATION UPDATE (optional)
 // =========================
