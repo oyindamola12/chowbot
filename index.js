@@ -3366,7 +3366,12 @@ async function notifyCustomer(phone, message) {
 //   }
 // }
 
-
+function normalizePhone(phone) {
+  let cleaned = phone.replace(/\D/g, '');
+  if (cleaned.startsWith('0')) cleaned = '234' + cleaned.substring(1);
+  if (!cleaned.startsWith('234')) cleaned = '234' + cleaned;
+  return cleaned;
+}
 
 async function createPaymentLink(email, amount, metadata, callbackUrl = null) {
   try {
@@ -3491,6 +3496,7 @@ app.post("/register-restaurant", async (req, res) => {
     if (!existing.empty) {
       return res.json({ success: false, message: "⚠️ This WhatsApp number is already registered." });
     }
+const normalizedPhone = normalizePhone(phone);
 
     const restaurantId = generateRestaurantId(name);
     const apiKey = generateApiKey();
@@ -3512,7 +3518,7 @@ app.post("/register-restaurant", async (req, res) => {
 
     // Save restaurant to Firestore
 await db.collection("restaurants").doc(restaurantId).set({
-  restaurantId, name, phone, state, localGovt,
+  restaurantId, name, normalizedPhone, state, localGovt,
   address: location,
   searchState: state.toLowerCase(),
   searchLGA: localGovt.toLowerCase(),
@@ -3907,25 +3913,49 @@ const link = await createPaymentLink(
 // 📊 RESTAURANT DASHBOARD API ENDPOINTS
 // =========================
 
+// app.post("/api/restaurant/orders", async (req, res) => {
+//   try {
+//     const { apiKey } = req.body;
+//     if (!apiKey) return res.status(400).json({ error: "Missing apiKey" });
+//     const restaurantQuery = await db.collection("restaurants").where("apiKey", "==", apiKey).limit(1)
+//     .get();
+//     if (restaurantQuery.empty) return res.status(401).json({ error: "Invalid API key" });
+//     const restaurant = restaurantQuery.docs[0].data();
+//     const ordersSnapshot = await db.collection("orders")
+//       .where("restaurant", "==", restaurant.restaurantId)
+//       .orderBy("createdAt", "desc")
+//       .get();
+//     const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+//     res.json({ restaurant: { name: restaurant.name, phone: restaurant.phone, apiKey: restaurant.apiKey }, orders });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
 app.post("/api/restaurant/orders", async (req, res) => {
   try {
     const { apiKey } = req.body;
     if (!apiKey) return res.status(400).json({ error: "Missing apiKey" });
+
     const restaurantQuery = await db.collection("restaurants").where("apiKey", "==", apiKey).limit(1).get();
-    if (restaurantQuery.empty) return res.status(401).json({ error: "Invalid API key" });
+    if (restaurantQuery.empty) {
+      return res.status(401).json({ error: "Invalid API key" });
+    }
     const restaurant = restaurantQuery.docs[0].data();
+
     const ordersSnapshot = await db.collection("orders")
       .where("restaurant", "==", restaurant.restaurantId)
       .orderBy("createdAt", "desc")
       .get();
+
     const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json({ restaurant: { name: restaurant.name, phone: restaurant.phone, apiKey: restaurant.apiKey }, orders });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    console.error("Error in /api/restaurant/orders:", err);
+    res.status(500).json({ error: "Server error: " + err.message });
   }
 });
-
 app.post("/api/restaurant/update-status", async (req, res) => {
   try {
     const { apiKey, orderId, newStatus } = req.body;

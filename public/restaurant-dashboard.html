@@ -75,17 +75,38 @@
         }
     }
 
-    async function loadOrders(apiKey) {
-        const res = await fetch('/api/restaurant/orders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ apiKey })
-        });
-        if (!res.ok) throw new Error('Failed to load orders');
-        const data = await res.json();
-        renderDashboard(data);
-    }
+    // async function loadOrders(apiKey) {
+    //     const res = await fetch('/api/restaurant/orders', {
+    //         method: 'POST',
+    //         headers: { 'Content-Type': 'application/json' },
+    //         body: JSON.stringify({ apiKey })
+    //     });
+    //     if (!res.ok) throw new Error('Failed to load orders');
+    //     const data = await res.json();
+    //     renderDashboard(data);
+    // }
 
+    
+    async function loadOrders(apiKey) {
+  try {
+    const res = await fetch('/api/restaurant/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey })
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
+    const data = await res.json();
+    renderDashboard(data);
+  } catch (err) {
+    console.error('Load orders error:', err);
+    showError('Failed to load orders: ' + err.message);
+  }
+}
+    
+    
     function renderDashboard(data) {
         const restaurant = data.restaurant;
         const orders = data.orders || [];
