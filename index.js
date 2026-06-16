@@ -3926,15 +3926,19 @@ app.post("/api/restaurant/orders", async (req, res) => {
       .get();
     const orders = ordersSnapshot.docs.map(doc => {
       const data = doc.data();
-      // Convert Firestore Timestamp to ISO string
-      if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-        data.createdAt = data.createdAt.toDate().toISOString();
-      }
-      // Also convert updatedAt if present
-      if (data.updatedAt && typeof data.updatedAt.toDate === 'function') {
-        data.updatedAt = data.updatedAt.toDate().toISOString();
-      }
-      return { id: doc.id, ...data };
+      // // Convert Firestore Timestamp to ISO string
+      // if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+      //   data.createdAt = data.createdAt.toDate().toISOString();
+      // }
+      // // Also convert updatedAt if present
+      // if (data.updatedAt && typeof data.updatedAt.toDate === 'function') {
+      //   data.updatedAt = data.updatedAt.toDate().toISOString();
+      // }
+ return {
+    id: doc.id,
+    ...data,
+    createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : null
+  };
     });
     res.json({ restaurant: { name: restaurant.name, phone: restaurant.phone, apiKey: restaurant.apiKey }, orders });
   } catch (err) {

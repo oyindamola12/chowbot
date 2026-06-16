@@ -156,7 +156,7 @@
                         <td>₦${order.cartTotal}</td>
                         <td><span class="badge ${statusClass}">${statusText}</span></td>
                         <td>${order.address || '-'}</td>
-                        <td>${new Date(order.createdAt?.toDate()).toLocaleString()}</td>
+                     <td>${order.createdAt ? (order.createdAt.toDate ? new Date(order.createdAt.toDate()).toLocaleString() : new Date(order.createdAt).toLocaleString()) : '-'}</td>
                         <td>
                             ${canUpdate ? `
                                 <select id="status-${order.id}" class="status-select">
