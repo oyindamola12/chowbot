@@ -3324,10 +3324,10 @@ async function getRestaurantsByLocation(input) {
   const searchTerm = input.toLowerCase().trim();
   // Query where state OR localGovt matches the search term
   const stateSnapshot = await db.collection("restaurants")
-    .where("searchState", "==", searchTerm)
+    .where("state", "==", searchTerm)
     .get();
   const lgaSnapshot = await db.collection("restaurants")
-    .where("searchLGA", "==", searchTerm)
+    .where("localGovt", "==", searchTerm)
     .get();
   
   const map = new Map();
