@@ -24,18 +24,38 @@ nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 40px;
+  padding: 16px 40px;
   background: white;
   position: sticky;
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 nav h2 {
   color: #ff5a3c;
   font-size: 1.6rem;
 }
-nav button {
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.nav-links a {
+  text-decoration: none;
+  color: #1e293b;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 30px;
+  transition: 0.2s;
+  font-size: 14px;
+}
+.nav-links a:hover {
+  background: #f1f5f9;
+}
+.nav-links .btn-primary {
   background: #ff5a3c;
   color: white;
   border: none;
@@ -45,8 +65,16 @@ nav button {
   font-weight: 600;
   transition: 0.2s;
 }
-nav button:hover {
+.nav-links .btn-primary:hover {
   background: #e04e2e;
+}
+.nav-links .btn-outline {
+  border: 1px solid #ff5a3c;
+  color: #ff5a3c;
+}
+.nav-links .btn-outline:hover {
+  background: #ff5a3c;
+  color: white;
 }
 
 .hero {
@@ -175,12 +203,27 @@ nav button:hover {
   margin-top: 4px;
   text-align: left;
 }
+.time-group {
+  display: flex;
+  gap: 12px;
+}
+.time-group input {
+  flex: 1;
+}
 
 footer {
   text-align: center;
   padding: 24px;
   background: #1e1e2a;
   color: #ccc;
+}
+footer a {
+  color: #ff5a3c;
+  text-decoration: none;
+  margin: 0 10px;
+}
+footer a:hover {
+  text-decoration: underline;
 }
 </style>
 </head>
@@ -189,7 +232,12 @@ footer {
 
 <nav>
   <h2>🍽 ChowBot</h2>
-  <button onclick="scrollToSignup()">Join as Restaurant</button>
+  <div class="nav-links">
+    <a href="restaurant-dashboard.html">📊 Dashboard</a>
+    <a href="menu.html">🍽 Menu</a>
+    <a href="employee.html">👥 Employee</a>
+    <button class="btn-primary" onclick="scrollToSignup()">Join as Restaurant</button>
+  </div>
 </nav>
 
 <section class="hero">
@@ -258,7 +306,14 @@ footer {
     <input id="location" placeholder="Full address">
     <input id="fee" placeholder="Delivery Fee (₦)" type="number">
     
-    <!-- NEW: Referral Code Field (optional) -->
+    <!-- Opening and Closing Time -->
+    <div class="time-group">
+      <input type="time" id="openingTime" value="08:00">
+      <input type="time" id="closingTime" value="22:00">
+    </div>
+    <div class="referral-note">Set your opening and closing times (24‑hour format). Customers won't be able to order outside these hours.</div>
+
+    <!-- Referral Code Field (optional) -->
     <input id="referralCode" placeholder="Referral Code (optional)">
     <div class="referral-note">If an employee referred you, enter their code here to give them commission.</div>
 
@@ -268,7 +323,13 @@ footer {
 </section>
 
 <footer>
-  © 2026 ChowBot — Built for Africa 🚀
+  <p>© 2026 ChowBot — Built for Africa 🚀</p>
+  <p>
+    <a href="restaurant-dashboard.html">Restaurant Dashboard</a>
+    <a href="menu.html">Menu Manager</a>
+    <a href="admin.html">Admin</a>
+    <a href="employee.html">Employee</a>
+  </p>
 </footer>
 
 <script>
@@ -303,10 +364,12 @@ async function register() {
   const localGovt = document.getElementById("lgaSelect").value;
   const location = document.getElementById("location").value.trim();
   const fee = document.getElementById("fee").value.trim();
+  const openingTime = document.getElementById("openingTime").value;
+  const closingTime = document.getElementById("closingTime").value;
   const referralCode = document.getElementById("referralCode").value.trim();
   const resultDiv = document.getElementById("result");
 
-  if (!name || !phone || !state || !localGovt || !location || !fee) {
+  if (!name || !phone || !state || !localGovt || !location || !fee || !openingTime || !closingTime) {
     resultDiv.innerHTML = "⚠️ All fields are required!";
     return;
   }
@@ -320,6 +383,8 @@ async function register() {
       body: JSON.stringify({
         name, phone, state, localGovt, location,
         deliveryFee: fee,
+        openingTime,
+        closingTime,
         referralCode: referralCode || undefined
       })
     });

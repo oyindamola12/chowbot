@@ -3452,6 +3452,29 @@ function generateApiKey() {
   return crypto.randomBytes(32).toString("hex");
 }
 
+
+// =========================
+// ⏰ OPENING HOURS HELPER
+// =========================
+function isRestaurantOpen(opening, closing) {
+  if (!opening || !closing) return true; // If not set, assume open
+  const now = new Date();
+  // Use Nigeria time (UTC+1) – adjust if needed
+  const nigeriaTime = new Date(now.toLocaleString("en-US", { timeZone: "Africa/Lagos" }));
+  const currentMinutes = nigeriaTime.getHours() * 60 + nigeriaTime.getMinutes();
+
+  const [openHour, openMin] = opening.split(':').map(Number);
+  const [closeHour, closeMin] = closing.split(':').map(Number);
+  const openMinutes = openHour * 60 + openMin;
+  const closeMinutes = closeHour * 60 + closeMin;
+
+  if (openMinutes <= closeMinutes) {
+    return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+  } else {
+    // Overnight (e.g., 22:00 to 02:00)
+    return currentMinutes >= openMinutes || currentMinutes < closeMinutes;
+  }
+}
 // =========================
 // 👥 REFERRER MANAGEMENT (for employees)
 // =========================
@@ -3662,6 +3685,16 @@ app.post("/webhook", async (req, res) => {
     if (message.startsWith("hi")) {
       const id = message.split(" ")[1];
       if (id) {
+        // ✅ Check if restaurant is open
+        const restaurant = await getRestaurant(id);
+        if (!restaurant) {
+          twiml.message("❌ Restaurant not found.");
+          return res.type("text/xml").send(twiml.toString());
+        }
+        if (!isRestaurantOpen(restaurant.openingTime, restaurant.closingTime)) {
+          twiml.message(`🕒 Sorry, ${restaurant.name} is currently closed. It will open at ${restaurant.openingTime}. Please try again later.`);
+          return res.type("text/xml").send(twiml.toString());
+        }
         user.restaurant = id;
         user.cart = [];
         user.step = null;
@@ -3670,6 +3703,7 @@ app.post("/webhook", async (req, res) => {
         await buildMenuTwiML(id, twiml);
         return res.type("text/xml").send(twiml.toString());
       }
+      
       user.step = "location";
       user.restaurant = null;
       user.address = null;
@@ -3697,6 +3731,11 @@ app.post("/webhook", async (req, res) => {
       if (!selected) {
         twiml.message("❌ Invalid choice");
       } else {
+        // ✅ Check if restaurant is open
+        if (!isRestaurantOpen(selected.openingTime, selected.closingTime)) {
+          twiml.message(`🕒 Sorry, ${selected.name} is currently closed. It will open at ${selected.openingTime}. Please try again later.`);
+          return res.type("text/xml").send(twiml.toString());
+        }
         user.restaurant = selected.id;
         user.cart = [];
         user.step = null;
@@ -3807,24 +3846,19 @@ app.post("/webhook", async (req, res) => {
         status: "pending_payment",
         createdAt: new Date()
       });
-      // const link = await createPaymentLink(
-      //   "user@email.com", pricing.customerPays,
-      //   { orderId, phone: from, restaurant: user.restaurant, cart: JSON.stringify(user.cart), address: user.address }
-      // );
-
       const successUrl = `https://chowbot-kgdk.onrender.com/payment-success.html?orderId=${orderId}&phone=${encodeURIComponent(from)}`;
-const link = await createPaymentLink(
-  "user@email.com",
-  pricing.customerPays,
-  {
-    orderId,
-    phone: from,
-    restaurant: user.restaurant,
-    cart: JSON.stringify(user.cart),
-    address: user.address
-  },
-  successUrl   // pass callback URL
-);
+      const link = await createPaymentLink(
+        "user@email.com",
+        pricing.customerPays,
+        {
+          orderId,
+          phone: from,
+          restaurant: user.restaurant,
+          cart: JSON.stringify(user.cart),
+          address: user.address
+        },
+        successUrl
+      );
       twiml.message(
         `🧾 ORDER SUMMARY\n\n${formatCartUI(user.cart)}\n\n` +
         `🏠 Delivery: ${user.address}\n🚚 Fee: ₦${pricing.serviceFee}\n💰 Total: ₦${pricing.customerPays}\n\n` +
@@ -3940,7 +3974,8 @@ app.post("/api/restaurant/orders", async (req, res) => {
     createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : null
   };
     });
-    res.json({ restaurant: { name: restaurant.name, phone: restaurant.phone, apiKey: restaurant.apiKey }, orders });
+    res.json({ restaurant: { name: restaurant.name, phone: restaurant.phone, apiKey: restaurant.apiKey,openingTime: restaurant.openingTime || null,
+    closingTime: restaurant.closingTime || null}, orders });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error: " + err.message });

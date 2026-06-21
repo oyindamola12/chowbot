@@ -6,31 +6,183 @@
     <title>Restaurant Dashboard</title>
     <style>
         * { font-family: system-ui, -apple-system, 'Segoe UI', Roboto; box-sizing: border-box; }
-        body { background: #f1f5f9; margin: 0; padding: 24px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .card { background: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        body { background: #f1f5f9; margin: 0; padding: 0; }
+        
+        /* Navigation */
+        .navbar {
+            background: white;
+            padding: 12px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .navbar h2 {
+            color: #ff5a3c;
+            font-size: 1.4rem;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #1e293b;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 30px;
+            transition: 0.2s;
+            font-size: 14px;
+        }
+        .nav-links a:hover {
+            background: #f1f5f9;
+        }
+        .nav-links .btn-primary {
+            background: #ff5a3c;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .nav-links .btn-primary:hover {
+            background: #e04e2e;
+        }
+        .nav-links .btn-outline {
+            border: 1px solid #ff5a3c;
+            color: #ff5a3c;
+            background: transparent;
+        }
+        .nav-links .btn-outline:hover {
+            background: #ff5a3c;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
         h1, h2, h3 { margin-top: 0; }
-        .login-area { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
-        .login-area input { padding: 12px 16px; border-radius: 40px; border: 1px solid #cbd5e1; min-width: 250px; }
-        .login-area button { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 40px; font-weight: 600; cursor: pointer; }
-        .error { background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 16px; margin-bottom: 16px; display: none; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        .login-area {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .login-area input {
+            padding: 12px 16px;
+            border-radius: 40px;
+            border: 1px solid #cbd5e1;
+            min-width: 250px;
+        }
+        .login-area button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .error {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 12px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
         th { background: #f8fafc; }
-        .badge { padding: 4px 12px; border-radius: 30px; font-size: 12px; font-weight: 500; }
+        .badge {
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 500;
+        }
         .status-paid { background: #dbeafe; color: #1e40af; }
         .status-preparing { background: #fef3c7; color: #92400e; }
         .status-out_for_delivery { background: #d1fae5; color: #065f46; }
         .status-delivered { background: #e0e7ff; color: #3730a3; }
-        select, button.status-btn { padding: 6px 12px; border-radius: 30px; border: 1px solid #cbd5e1; background: white; cursor: pointer; }
-        button.status-btn { background: #3b82f6; color: white; border: none; margin-left: 8px; }
+        select, button.status-btn {
+            padding: 6px 12px;
+            border-radius: 30px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            cursor: pointer;
+        }
+        button.status-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            margin-left: 8px;
+        }
         button.status-btn:hover { background: #2563eb; }
-        .summary { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
-        .summary-card { background: #f1f5f9; border-radius: 20px; padding: 12px 20px; }
-        @media (max-width: 700px) { th, td { font-size: 12px; } }
+        .summary {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 12px 20px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-open { background: #22c55e; }
+        .status-closed { background: #ef4444; }
+        @media (max-width: 700px) {
+            th, td { font-size: 12px; }
+            .navbar { padding: 12px 20px; }
+        }
     </style>
 </head>
 <body>
+
+<!-- Navigation -->
+<nav class="navbar">
+    <h2>🍽 ChowBot</h2>
+    <div class="nav-links">
+        <a href="index.html">🏠 Home</a>
+        <a href="menu.html">🍽 Menu</a>
+
+        <a href="employee.html">👥 Employee</a>
+        <button class="btn-primary" onclick="logout()">🚪 Logout</button>
+    </div>
+</nav>
+
 <div class="container">
     <div class="card">
         <h1>🏪 Restaurant Dashboard</h1>
@@ -44,6 +196,40 @@
 </div>
 
 <script>
+    // =========================
+    // ⏰ OPENING HOURS HELPER (frontend)
+    // =========================
+    function isRestaurantOpen(opening, closing) {
+        if (!opening || !closing) return true;
+        const now = new Date();
+        const nigeriaTime = new Date(now.toLocaleString("en-US", { timeZone: "Africa/Lagos" }));
+        const currentMinutes = nigeriaTime.getHours() * 60 + nigeriaTime.getMinutes();
+
+        const [openHour, openMin] = opening.split(':').map(Number);
+        const [closeHour, closeMin] = closing.split(':').map(Number);
+        const openMinutes = openHour * 60 + openMin;
+        const closeMinutes = closeHour * 60 + closeMin;
+
+        if (openMinutes <= closeMinutes) {
+            return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+        } else {
+            return currentMinutes >= openMinutes || currentMinutes < closeMinutes;
+        }
+    }
+
+    // =========================
+    // LOGOUT
+    // =========================
+    function logout() {
+        // Clear any stored API key and reload to login state
+        window.currentApiKey = null;
+        document.getElementById('apiKeyInput').value = '';
+        document.getElementById('content').innerHTML = '';
+        document.getElementById('errorMsg').style.display = 'none';
+        // Optionally redirect to home
+        // window.location.href = 'index.html';
+    }
+
     const loginBtn = document.getElementById('loginBtn');
     const apiKeyInput = document.getElementById('apiKeyInput');
     const errorDiv = document.getElementById('errorMsg');
@@ -66,7 +252,6 @@
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Update failed');
-            // Reload orders after successful update
             await loadOrders(apiKey);
         } catch (err) {
             showError(err.message);
@@ -75,58 +260,48 @@
         }
     }
 
-    // async function loadOrders(apiKey) {
-    //     const res = await fetch('/api/restaurant/orders', {
-    //         method: 'POST',
-    //         headers: { 'Content-Type': 'application/json' },
-    //         body: JSON.stringify({ apiKey })
-    //     });
-    //     if (!res.ok) throw new Error('Failed to load orders');
-    //     const data = await res.json();
-    //     renderDashboard(data);
-    // }
-
-    
     async function loadOrders(apiKey) {
-  try {
-    const res = await fetch('/api/restaurant/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ apiKey })
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`HTTP ${res.status}: ${text}`);
+        try {
+            const res = await fetch('/api/restaurant/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey })
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(`HTTP ${res.status}: ${text}`);
+            }
+            const data = await res.json();
+            renderDashboard(data);
+        } catch (err) {
+            console.error('Load orders error:', err);
+            showError('Failed to load orders: ' + err.message);
+        }
     }
-    const data = await res.json();
-    renderDashboard(data);
-  } catch (err) {
-    console.error('Load orders error:', err);
-    showError('Failed to load orders: ' + err.message);
-  }
-}
-    
-    
+
     function renderDashboard(data) {
         const restaurant = data.restaurant;
         const orders = data.orders || [];
-        // Calculate earnings (sum of restaurantEarnings from each order)
+
         let totalEarnings = 0;
         orders.forEach(o => {
             if (o.restaurantEarnings) totalEarnings += o.restaurantEarnings;
-            else {
-                // Fallback: recompute roughly if not stored
-                const cartTotal = o.cartTotal || 0;
-                // crude approximation: restaurantEarnings ~ cartTotal - commission
-                // but we'd need pricing. Use stored value if exists
-                if (o.pricing && o.pricing.restaurantEarnings) totalEarnings += o.pricing.restaurantEarnings;
-            }
+            else if (o.pricing && o.pricing.restaurantEarnings) totalEarnings += o.pricing.restaurantEarnings;
         });
+
+        const isOpen = isRestaurantOpen(restaurant.openingTime, restaurant.closingTime);
+        const statusText = isOpen ? 'Open now' : 'Closed';
+        const statusClass = isOpen ? 'status-open' : 'status-closed';
 
         let html = `
             <div class="card">
                 <h2>🍽️ ${restaurant.name}</h2>
                 <p>📞 ${restaurant.phone} | 🔑 API Key: ****${restaurant.apiKey?.slice(-6)}</p>
+                <p>
+                    <span class="status-indicator ${statusClass}"></span>
+                    <strong>${statusText}</strong>
+                    ${restaurant.openingTime && restaurant.closingTime ? `| 🕒 ${restaurant.openingTime} – ${restaurant.closingTime}` : ''}
+                </p>
                 <div class="summary">
                     <div class="summary-card">📦 Total Orders: ${orders.length}</div>
                     <div class="summary-card">💰 Total Earnings: ₦${totalEarnings.toLocaleString()}</div>
@@ -145,24 +320,28 @@
             orders.forEach(order => {
                 const itemsList = order.cart?.map(i => `${i.name} x${i.qty}`).join(', ') || '-';
                 const statusClass = `status-${order.status || 'paid'}`;
-                let statusText = order.status || 'paid';
-                // Show action buttons only if not delivered
-                const canUpdate = statusText !== 'delivered';
+                let statusTextOrder = order.status || 'paid';
+                const canUpdate = statusTextOrder !== 'delivered';
+                const dateStr = order.createdAt
+                    ? (order.createdAt.toDate
+                        ? new Date(order.createdAt.toDate()).toLocaleString()
+                        : new Date(order.createdAt).toLocaleString())
+                    : '-';
                 html += `
                     <tr>
                         <td>#${order.id.slice(-6)}</td>
                         <td>${order.phone}</td>
                         <td>${itemsList}</td>
                         <td>₦${order.cartTotal}</td>
-                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td><span class="badge ${statusClass}">${statusTextOrder}</span></td>
                         <td>${order.address || '-'}</td>
-                     <td>${order.createdAt ? (order.createdAt.toDate ? new Date(order.createdAt.toDate()).toLocaleString() : new Date(order.createdAt).toLocaleString()) : '-'}</td>
+                        <td>${dateStr}</td>
                         <td>
                             ${canUpdate ? `
                                 <select id="status-${order.id}" class="status-select">
-                                    <option value="preparing" ${statusText === 'preparing' ? 'selected' : ''}>Preparing</option>
-                                    <option value="out_for_delivery" ${statusText === 'out_for_delivery' ? 'selected' : ''}>Out for delivery</option>
-                                    <option value="delivered" ${statusText === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                    <option value="preparing" ${statusTextOrder === 'preparing' ? 'selected' : ''}>Preparing</option>
+                                    <option value="out_for_delivery" ${statusTextOrder === 'out_for_delivery' ? 'selected' : ''}>Out for delivery</option>
+                                    <option value="delivered" ${statusTextOrder === 'delivered' ? 'selected' : ''}>Delivered</option>
                                 </select>
                                 <button class="status-btn" onclick="updateStatus('${restaurant.apiKey}', '${order.id}', document.getElementById('status-${order.id}').value, this)">Update</button>
                             ` : '✅ Completed'}
@@ -180,7 +359,6 @@
         if (!apiKey) return showError('Please enter your API key');
         try {
             await loadOrders(apiKey);
-            // Store apiKey for later use in update buttons (global variable)
             window.currentApiKey = apiKey;
         } catch (err) {
             showError(err.message);
