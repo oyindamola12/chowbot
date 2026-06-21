@@ -91,11 +91,11 @@
         .badge-level3 { background: #d1fae5; color: #065f46; }
         .share-box {
             background: #f1f5f9;
-            padding: 12px 16px;
+            padding: 8px 12px;
             border-radius: 30px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             flex-wrap: wrap;
         }
         .share-box input {
@@ -110,12 +110,15 @@
             background: #ff5a3c;
             color: white;
             border: none;
-            padding: 8px 20px;
+            padding: 6px 16px;
             border-radius: 30px;
             cursor: pointer;
             font-weight: 500;
         }
         .share-box button:hover { background: #e04e2e; }
+        .ref-section { background: #f8fafc; border-radius: 16px; padding: 16px; margin-top: 12px; border: 1px solid #e2e8f0; }
+        .ref-section h4 { margin-bottom: 8px; }
+        .ref-section p { font-size: 13px; color: #64748b; margin-top: 4px; }
         @media (max-width: 700px) { .navbar { padding: 12px 20px; } th, td { font-size: 12px; } }
     </style>
 </head>
@@ -195,6 +198,13 @@
         }
     }
 
+    function copyLink(inputId) {
+        const input = document.getElementById(inputId);
+        input.select();
+        document.execCommand('copy');
+        alert('✅ Link copied!');
+    }
+
     function renderEmployeeDashboard(data) {
         const emp = data.employee;
         const restaurants = data.referredRestaurants || [];
@@ -233,9 +243,32 @@
                 </div>
                 <div class="share-box">
                     <input type="text" value="${shareLink}" id="shareLinkInput" readonly>
-                    <button onclick="copyShareLink()">📋 Copy Link</button>
+                    <button onclick="copyLink('shareLinkInput')">📋 Copy Link</button>
                 </div>
                 <button style="margin-top:12px;background:#25D366;padding:8px 16px;border:none;border-radius:30px;color:white;cursor:pointer;" onclick="shareWhatsApp()">💬 Share on WhatsApp</button>
+            </div>
+
+            <!-- REFERRAL LINKS SECTION -->
+            <div class="card ref-section">
+                <h3>📤 Share Your Referral Links</h3>
+                <div style="display:flex; flex-direction:column; gap:16px; margin-top:12px;">
+                    <div>
+                        <p style="font-weight:500;">🏪 Refer a Restaurant</p>
+                        <div class="share-box">
+                            <input type="text" value="https://chowbot-kgdk.onrender.com/index.html?ref=${emp.referralCode}" readonly id="restaurantRefLink">
+                            <button onclick="copyLink('restaurantRefLink')">📋 Copy</button>
+                        </div>
+                        <p style="font-size:12px; color:#64748b; margin-top:4px;">Share this link with restaurant owners. You earn ₦50 per order.</p>
+                    </div>
+                    <div>
+                        <p style="font-weight:500;">👥 Refer a New Employee</p>
+                        <div class="share-box">
+                            <input type="text" value="https://chowbot-kgdk.onrender.com/employee-register.html?ref=${emp.referralCode}" readonly id="employeeRefLink">
+                            <button onclick="copyLink('employeeRefLink')">📋 Copy</button>
+                        </div>
+                        <p style="font-size:12px; color:#64748b; margin-top:4px;">Share this link with potential team members. Build your downline.</p>
+                    </div>
+                </div>
             </div>
 
             <div class="card">
@@ -315,15 +348,9 @@
         contentDiv.innerHTML = html;
     }
 
-    function copyShareLink() {
-        const input = document.getElementById('shareLinkInput');
-        input.select();
-        document.execCommand('copy');
-        alert('✅ Link copied! Share it with your downline.');
-    }
-
     function shareWhatsApp() {
-        const link = document.getElementById('shareLinkInput').value;
+        const link = document.getElementById('shareLinkInput')?.value;
+        if (!link) return;
         const message = encodeURIComponent(`Join my team on ChowBot! Use my referral code to get started: ${link}`);
         window.open(`https://wa.me/?text=${message}`, '_blank');
     }
@@ -344,6 +371,7 @@
         }
     });
 
+    // Auto-load from URL
     const urlParams = new URLSearchParams(window.location.search);
     const codeParam = urlParams.get('code');
     if (codeParam) {

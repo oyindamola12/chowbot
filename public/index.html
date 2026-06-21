@@ -407,6 +407,19 @@ async function register() {
     resultDiv.innerHTML = "❌ Server error. Please try again.";
   }
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    if (ref) {
+        document.getElementById('referralCode').value = ref;
+        // Optional: show a message that the referral code was applied
+        const note = document.querySelector('.referral-note');
+        if (note) {
+            note.innerHTML = `✅ Referral code <strong>${ref}</strong> applied! You'll be linked to your referrer.`;
+        }
+    }
+});
 </script>
 </body>
 </html>
