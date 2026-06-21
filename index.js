@@ -4442,11 +4442,12 @@ app.post("/api/employee/data", async (req, res) => {
     const userPhone = user.phone;
 
     // Get transactions
-    const txSnapshot = await db.collection("walletTransactions")
-      .where("phone", "==", userPhone)
-      .orderBy("createdAt", "desc")
-      .get();
-    const transactions = txSnapshot.docs.map(doc => doc.data());
+  const txSnapshot = await db.collection("walletTransactions")
+  .where("phone", "==", userPhone)
+  .get();
+// Then sort in memory
+const transactions = txSnapshot.docs.map(doc => doc.data());
+transactions.sort((a, b) => (b.createdAt?._seconds || 0) - (a.createdAt?._seconds || 0));
 
     // Get restaurants directly referred by this user
     const restSnapshot = await db.collection("restaurants")
