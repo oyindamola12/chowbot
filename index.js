@@ -4139,10 +4139,39 @@ app.post("/paystack/webhook", async (req, res) => {
     await orderRef.delete();
 
     // --- REFERRAL COMMISSIONS (if any) ---
-    if (restaurant.referredBy && restaurant.referrerLevel) {
-      // ... (your existing commission logic) ...
-    }
 
+// ===================== REFERRAL COMMISSIONS =====================
+if (restaurant.referredBy && restaurant.referrerLevel) {
+  const level = restaurant.referrerLevel;
+  
+  // Direct referrer always gets ₦50
+  await creditWallet(restaurant.referredBy, 50, `Commission from order ${orderId.slice(-6)} (Direct referral bonus)`, orderId);
+  
+  // Then add upline shares based on the referrer's level
+  if (level === 2) {
+    // Level 2 referred → Level 1 gets ₦20
+    const level2User = await getUser(restaurant.referredBy);
+    const level1Phone = level2User?.referredBy || null;
+    if (level1Phone) {
+      await creditWallet(level1Phone, 30, `Commission from order ${orderId.slice(-6)} (Level 1 upline)`, orderId);
+    }
+  } else if (level === 3) {
+    // Level 3 referred → Level 2 gets ₦30, Level 1 gets ₦20
+    const level3User = await getUser(restaurant.referredBy);
+    const level2Phone = level3User?.referredBy || null;
+    let level1Phone = null;
+    if (level2Phone) {
+      const level2User = await getUser(level2Phone);
+      level1Phone = level2User?.referredBy || null;
+    }
+    if (level2Phone) {
+      await creditWallet(level2Phone, 30, `Commission from order ${orderId.slice(-6)} (Level 2 upline)`, orderId);
+    }
+    if (level1Phone) {
+      await creditWallet(level1Phone, 20, `Commission from order ${orderId.slice(-6)} (Level 1 upline)`, orderId);
+    }
+  }
+}
     // --- SEND ORDER TO RESTAURANT VIA WHATSAPP ---
     let msg = `📦 NEW PAID ORDER #${orderId.slice(-6)}\n\n`;
     order.cart.forEach(i => { msg += `${i.name} x${i.qty} – ₦${i.price * i.qty}\n`; });
@@ -4208,6 +4237,164 @@ app.post("/update-rider-location", async (req, res) => {
   }
 });
 
+// =========================
+// 👑 ADMIN: FULL DATA WITH EMPLOYEES BY LEVEL
+// =========================
+app.post("/api/admin/data", async (req, res) => {
+  try {
+    const { adminKey } = req.body;
+    if (adminKey !== process.env.ADMIN_SECRET_KEY) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Get all restaurants
+    const restaurantsSnapshot = await db.collection("restaurants").get();
+    const restaurants = restaurantsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Get all orders
+    const ordersSnapshot = await db.collection("orders").orderBy("createdAt", "desc").get();
+    const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Get all users (employees) and organize by level
+    const usersSnapshot = await db.collection("users").get();
+    const allUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Organize users by level
+    const level1 = allUsers.filter(u => u.level === 1);
+    const level2 = allUsers.filter(u => u.level === 2);
+    const level3 = allUsers.filter(u => u.level === 3);
+
+    // Build hierarchy: for each Level 1, show their Level 2 downlines
+    const hierarchy = level1.map(l1 => {
+      const downlines = level2.filter(l2 => l2.referredBy === l1.phone);
+      return {
+        ...l1,
+        downlines: downlines.map(l2 => {
+          const downlines2 = level3.filter(l3 => l3.referredBy === l2.phone);
+          return {
+            ...l2,
+            downlines: downlines2
+          };
+        })
+      };
+    });
+
+    // Summary stats by level
+    const levelStats = {
+      level1: { count: level1.length, totalEarned: level1.reduce((s, u) => s + (u.totalEarned || 0), 0) },
+      level2: { count: level2.length, totalEarned: level2.reduce((s, u) => s + (u.totalEarned || 0), 0) },
+      level3: { count: level3.length, totalEarned: level3.reduce((s, u) => s + (u.totalEarned || 0), 0) }
+    };
+
+    res.json({
+      restaurants,
+      orders,
+      users: allUsers,
+      level1,
+      level2,
+      level3,
+      hierarchy,
+      levelStats,
+      summary: {
+        totalRestaurants: restaurants.length,
+        totalOrders: orders.length,
+        totalUsers: allUsers.length,
+        totalLevel1: level1.length,
+        totalLevel2: level2.length,
+        totalLevel3: level3.length,
+        totalServiceFees: orders.reduce((sum, o) => sum + (o.serviceFee || 250), 0),
+        totalEarnings: orders.reduce((sum, o) => sum + (o.restaurantEarnings || 0), 0)
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// =========================
+// 👥 EMPLOYEE DASHBOARD DATA
+// =========================
+app.post("/api/employee/data", async (req, res) => {
+  try {
+    const { identifier } = req.body;
+    if (!identifier) return res.status(400).json({ error: "Missing identifier" });
+
+    // Find user by referral code OR phone
+    let userQuery = await db.collection("users").where("referralCode", "==", identifier).limit(1).get();
+    if (userQuery.empty) {
+      // Try by phone
+      userQuery = await db.collection("users").where("phone", "==", identifier).limit(1).get();
+    }
+    if (userQuery.empty) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+    const user = userQuery.docs[0].data();
+
+    // Get downline (people they recruited)
+    const downlineSnapshot = await db.collection("users").where("referredBy", "==", user.phone).get();
+    const downline = downlineSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Get restaurants they directly referred
+    const restaurantsSnapshot = await db.collection("restaurants").where("referredBy", "==", user.phone).get();
+    const referredRestaurants = restaurantsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Get commission transactions
+    const transactionsSnapshot = await db.collection("walletTransactions")
+      .where("phone", "==", user.phone)
+      .orderBy("createdAt", "desc")
+      .get();
+    const transactions = transactionsSnapshot.docs.map(doc => doc.data());
+
+    res.json({
+      employee: {
+        phone: user.phone,
+        name: user.name,
+        level: user.level,
+        referralCode: user.referralCode,
+        walletBalance: user.walletBalance || 0,
+        totalEarned: user.totalEarned || 0,
+        directReferralsCount: user.directReferralsCount || 0,
+        referredBy: user.referredBy
+      },
+      downline,
+      referredRestaurants,
+      transactions
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+// =========================
+// 👑 ADMIN: CREATE REFERRER (EMPLOYEE)
+// =========================
+app.post("/admin/create-referrer", async (req, res) => {
+  try {
+    const { adminKey, name, phone, referredByCode } = req.body;
+    if (adminKey !== process.env.ADMIN_SECRET_KEY) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+    // Normalize phone
+    let cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.startsWith('0')) cleanPhone = '234' + cleanPhone.substring(1);
+    if (!cleanPhone.startsWith('234')) cleanPhone = '234' + cleanPhone;
+
+    // Check if user already exists
+    const existing = await db.collection("users").doc(cleanPhone).get();
+    if (existing.exists) {
+      return res.json({ success: false, message: "User already exists." });
+    }
+
+    const user = await createUser(cleanPhone, name, referredByCode || null);
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 // =========================
 // 🚀 START SERVER
 // =========================
