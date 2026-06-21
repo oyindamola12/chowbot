@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Employee – ChowBot</title>
+    <title>Join ChowBot – Employee Registration</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
@@ -71,20 +71,39 @@
         .success { background: #d1fae5; color: #065f46; }
         .error { background: #fee2e2; color: #b91c1c; }
         .note { font-size: 12px; color: #64748b; margin-top: 4px; }
+        .referral-code-box {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 30px;
+            margin: 12px 0;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .success a {
+            color: #065f46;
+            font-weight: 600;
+        }
+        .success a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <h2>🍽 ChowBot Admin</h2>
+        <h2>🍽 ChowBot</h2>
         <div class="nav-links">
             <a href="index.html">🏠 Home</a>
-            <a href="admin.html">👑 Admin</a>
-            <a href="restaurant-dashboard.html">📊 Dashboard</a>
+            <a href="employee.html">👥 Dashboard</a>
+            <a href="restaurant-dashboard.html">📊 Restaurant</a>
         </div>
     </nav>
     <div class="container">
         <div class="card">
-            <h1>👥 Register Employee</h1>
+            <h1>🚀 Become a ChowBot Employee</h1>
+            <p style="text-align:center;color:#64748b;margin-bottom:20px;">
+                Register to start referring restaurants and earning commissions.
+            </p>
             <form id="employeeForm">
                 <div class="form-group">
                     <label>Full Name</label>
@@ -97,10 +116,10 @@
                 </div>
                 <div class="form-group">
                     <label>Upline Referral Code (optional)</label>
-                    <input type="text" id="uplineCode" placeholder="Referral code of the person who hired them">
-                    <div class="note">Leave blank if this is a Level 1 employee (hired by you).</div>
+                    <input type="text" id="uplineCode" placeholder="If someone invited you, enter their code">
+                    <div class="note">Leave blank if you were not invited.</div>
                 </div>
-                <button type="submit">➕ Register Employee</button>
+                <button type="submit">📝 Register Now</button>
             </form>
             <div id="result"></div>
         </div>
@@ -126,11 +145,10 @@
             resultDiv.innerHTML = '<div class="result" style="background:#f1f5f9;">⏳ Registering...</div>';
 
             try {
-                const res = await fetch('/admin/create-referrer', {
+                const res = await fetch('/api/employee/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        adminKey: prompt('Enter Admin Secret Key:'),
                         name,
                         phone: cleanPhone,
                         referredByCode: uplineCode
@@ -139,16 +157,28 @@
                 const data = await res.json();
                 if (data.success) {
                     const user = data.user;
+                    const dashboardLink = `employee.html?code=${user.referralCode}`;
                     resultDiv.innerHTML = `
                         <div class="result success">
-                            ✅ Employee registered successfully!<br>
+                            ✅ <strong>Registration successful!</strong><br><br>
+                            <strong>Name:</strong> ${user.name}<br>
                             <strong>Phone:</strong> ${user.phone}<br>
                             <strong>Level:</strong> ${user.level}<br>
-                            <strong>Referral Code:</strong> <code>${user.referralCode}</code><br><br>
-                            <strong>Share this link with the employee:</strong><br>
-                            <a href="employee.html?code=${user.referralCode}" target="_blank">
-                                employee.html?code=${user.referralCode}
-                            </a>
+                            <div class="referral-code-box">
+                                🔑 Your Referral Code: <strong>${user.referralCode}</strong>
+                            </div>
+                            <p style="margin-top:8px;">
+                                <strong>Share this link with restaurant owners you refer:</strong><br>
+                                <a href="${dashboardLink}" target="_blank">${dashboardLink}</a>
+                            </p>
+                            <p style="margin-top:12px;">
+                                <a href="${dashboardLink}" style="display:inline-block;background:#ff5a3c;color:white;padding:10px 20px;border-radius:30px;text-decoration:none;">
+                                    🚀 Go to Your Dashboard
+                                </a>
+                            </p>
+                            <p style="margin-top:12px;font-size:14px;color:#64748b;">
+                                Save this page or screenshot your referral code.
+                            </p>
                         </div>
                     `;
                     document.getElementById('employeeForm').reset();

@@ -4395,6 +4395,36 @@ app.post("/admin/create-referrer", async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+// =========================
+// 👥 PUBLIC EMPLOYEE REGISTRATION (self-service)
+// =========================
+app.post("/api/employee/register", async (req, res) => {
+  try {
+    const { name, phone, referredByCode } = req.body;
+    if (!name || !phone) {
+      return res.json({ success: false, message: "Name and phone are required." });
+    }
+
+    // Normalize phone
+    let cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.startsWith('0')) cleanPhone = '234' + cleanPhone.substring(1);
+    if (!cleanPhone.startsWith('234')) cleanPhone = '234' + cleanPhone;
+
+    // Check if user already exists
+    const existing = await db.collection("users").doc(cleanPhone).get();
+    if (existing.exists) {
+      return res.json({ success: false, message: "This phone number is already registered." });
+    }
+
+    // Create user (uses the existing createUser function)
+    const user = await createUser(cleanPhone, name, referredByCode || null);
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error("Employee self-registration error:", err);
+    res.status(500).json({ success: false, message: err.message || "Server error" });
+  }
+});
 // =========================
 // 🚀 START SERVER
 // =========================

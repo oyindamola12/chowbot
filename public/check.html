@@ -279,6 +279,29 @@
 </div>
 
 <script>
+    // =========================
+    // DATE FORMATTING HELPER
+    // =========================
+    function formatDate(dateValue) {
+        if (!dateValue) return '-';
+        try {
+            // If it's a Firestore Timestamp with _seconds
+            if (dateValue._seconds !== undefined) {
+                return new Date(dateValue._seconds * 1000).toLocaleString();
+            }
+            // If it has toDate method (Firestore Timestamp)
+            if (typeof dateValue.toDate === 'function') {
+                return dateValue.toDate().toLocaleString();
+            }
+            // If it's a string or number
+            const d = new Date(dateValue);
+            if (isNaN(d.getTime())) return '-';
+            return d.toLocaleString();
+        } catch (e) {
+            return '-';
+        }
+    }
+
     const loginBtn = document.getElementById('loginBtn');
     const adminKeyInput = document.getElementById('adminKeyInput');
     const errorDiv = document.getElementById('errorMsg');
@@ -635,7 +658,7 @@
         }
         html += `</tbody></table></div></div>`;
 
-        // Orders Table
+        // Orders Table (with fixed date)
         html += `
             <div class="card">
                 <h2>📦 Recent Orders (${orders.length})</h2>
@@ -650,11 +673,8 @@
             html += `<tr><td colspan="7">No orders yet</td></tr>`;
         } else {
             orders.slice(0, 50).forEach(o => {
-                const dateStr = o.createdAt
-                    ? (o.createdAt.toDate
-                        ? new Date(o.createdAt.toDate()).toLocaleString()
-                        : new Date(o.createdAt).toLocaleString())
-                    : '-';
+                // === USE formatDate HERE ===
+                const dateStr = formatDate(o.createdAt);
                 html += `
                     <tr>
                         <td>#${o.id?.slice(-6) || 'N/A'}</td>
