@@ -3451,7 +3451,81 @@ function generateRestaurantId(name) {
 function generateApiKey() {
   return crypto.randomBytes(32).toString("hex");
 }
+// =========================
+// 🔥 REFERRAL CODE GENERATOR
+// =========================
+function generateReferralCode(phone) {
+  const hash = crypto.createHash("md5").update(phone).digest("hex").substring(0, 8);
+  return hash.toUpperCase();
+}
 
+// =========================
+// 👥 CREATE USER (EMPLOYEE)
+// =========================
+async function createUser(phone, name, referredByCode = null) {
+  const userRef = db.collection("users").doc(phone);
+  const existing = await userRef.get();
+  if (existing.exists) return existing.data();
+
+  let level = 1;
+  let uplinePhone = null;
+  let referralPath = [];
+  let directReferralsCount = 0;
+
+  if (referredByCode) {
+    const referrerSnapshot = await db.collection("users").where("referralCode", "==", referredByCode).limit(1).get();
+    if (!referrerSnapshot.empty) {
+      const referrer = referrerSnapshot.docs[0].data();
+      uplinePhone = referrer.phone;
+      level = referrer.level + 1;
+      if (level > 3) level = 3; // max level 3
+      referralPath = [...(referrer.referralPath || [])];
+      referralPath.push(referrer.phone);
+      if (referralPath.length > 3) referralPath = referralPath.slice(-3);
+
+      // Increment upline's direct referral count
+      await db.collection("users").doc(uplinePhone).update({
+        directReferralsCount: admin.firestore.FieldValue.increment(1)
+      });
+      
+      // Check if upline should be promoted (Level 2 → Level 1 when reaching 10)
+      await checkAndPromote(uplinePhone);
+    }
+  }
+
+  const referralCode = generateReferralCode(phone);
+  const userData = {
+    phone,
+    name,
+    level,
+    referredBy: uplinePhone,
+    referralCode,
+    referralPath,
+    directReferralsCount: 0,
+    walletBalance: 0,
+    totalEarned: 0,
+    createdAt: new Date()
+  };
+  await userRef.set(userData);
+  return userData;
+}
+
+// =========================
+// ⬆️ PROMOTION CHECK
+// =========================
+async function checkAndPromote(phone) {
+  const userRef = db.collection("users").doc(phone);
+  const user = await userRef.get();
+  if (!user.exists) return;
+  const data = user.data();
+  if (data.level === 2 && (data.directReferralsCount || 0) >= 10) {
+    await userRef.update({
+      level: 1,
+      promotedAt: new Date()
+    });
+    console.log(`✅ User ${phone} promoted from Level 2 to Level 1`);
+  }
+}
 
 // =========================
 // ⏰ OPENING HOURS HELPER
@@ -3501,7 +3575,35 @@ async function creditWallet(phone, amount, description, orderId) {
     });
   });
 }
+// =========================
+// 👥 PUBLIC EMPLOYEE REGISTRATION (self-service)
+// =========================
+app.post("/api/employee/register", async (req, res) => {
+  try {
+    const { name, phone, referredByCode } = req.body;
+    if (!name || !phone) {
+      return res.json({ success: false, message: "Name and phone are required." });
+    }
 
+    // Normalize phone
+    let cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.startsWith('0')) cleanPhone = '234' + cleanPhone.substring(1);
+    if (!cleanPhone.startsWith('234')) cleanPhone = '234' + cleanPhone;
+
+    // Check if user already exists
+    const existing = await db.collection("users").doc(cleanPhone).get();
+    if (existing.exists) {
+      return res.json({ success: false, message: "This phone number is already registered." });
+    }
+
+    // Create user (uses the existing createUser function)
+    const user = await createUser(cleanPhone, name, referredByCode || null);
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error("Employee self-registration error:", err);
+    res.status(500).json({ success: false, message: err.message || "Server error" });
+  }
+});
 // =========================
 // 📍 REGISTER RESTAURANT (API)
 // =========================
@@ -4396,35 +4498,8 @@ app.post("/admin/create-referrer", async (req, res) => {
   }
 });
 
-// =========================
-// 👥 PUBLIC EMPLOYEE REGISTRATION (self-service)
-// =========================
-app.post("/api/employee/register", async (req, res) => {
-  try {
-    const { name, phone, referredByCode } = req.body;
-    if (!name || !phone) {
-      return res.json({ success: false, message: "Name and phone are required." });
-    }
 
-    // Normalize phone
-    let cleanPhone = phone.replace(/\D/g, '');
-    if (cleanPhone.startsWith('0')) cleanPhone = '234' + cleanPhone.substring(1);
-    if (!cleanPhone.startsWith('234')) cleanPhone = '234' + cleanPhone;
 
-    // Check if user already exists
-    const existing = await db.collection("users").doc(cleanPhone).get();
-    if (existing.exists) {
-      return res.json({ success: false, message: "This phone number is already registered." });
-    }
-
-    // Create user (uses the existing createUser function)
-    const user = await createUser(cleanPhone, name, referredByCode || null);
-    res.json({ success: true, user });
-  } catch (err) {
-    console.error("Employee self-registration error:", err);
-    res.status(500).json({ success: false, message: err.message || "Server error" });
-  }
-});
 // =========================
 // 🚀 START SERVER
 // =========================
