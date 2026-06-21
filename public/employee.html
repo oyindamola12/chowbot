@@ -6,18 +6,8 @@
     <title>Employee Dashboard – ChowBot</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-        body {
-            background: #f1f5f9;
-            padding: 0;
-        }
-
-        /* Navigation */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #f1f5f9; padding: 0; }
         .navbar {
             background: white;
             padding: 12px 40px;
@@ -29,16 +19,8 @@
             gap: 12px;
             margin-bottom: 30px;
         }
-        .navbar h2 {
-            color: #ff5a3c;
-            font-size: 1.4rem;
-        }
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+        .navbar h2 { color: #ff5a3c; font-size: 1.4rem; }
+        .nav-links { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .nav-links a {
             text-decoration: none;
             color: #1e293b;
@@ -48,9 +30,7 @@
             transition: 0.2s;
             font-size: 14px;
         }
-        .nav-links a:hover {
-            background: #f1f5f9;
-        }
+        .nav-links a:hover { background: #f1f5f9; }
         .nav-links .btn-primary {
             background: #ff5a3c;
             color: white;
@@ -61,37 +41,10 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .nav-links .btn-primary:hover {
-            background: #e04e2e;
-        }
-        .nav-links .btn-outline {
-            border: 1px solid #ff5a3c;
-            color: #ff5a3c;
-            background: transparent;
-        }
-        .nav-links .btn-outline:hover {
-            background: #ff5a3c;
-            color: white;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px 40px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 24px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        h1, h2, h3 {
-            margin-top: 0;
-        }
-
+        .nav-links .btn-primary:hover { background: #e04e2e; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px 40px; }
+        .card { background: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h1, h2, h3 { margin-top: 0; }
         .login-area {
             display: flex;
             gap: 12px;
@@ -114,15 +67,7 @@
             font-weight: 600;
             cursor: pointer;
         }
-        .error {
-            background: #fee2e2;
-            color: #b91c1c;
-            padding: 12px;
-            border-radius: 16px;
-            margin-bottom: 16px;
-            display: none;
-        }
-
+        .error { background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 16px; margin-bottom: 16px; display: none; }
         .summary-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -135,41 +80,15 @@
             padding: 16px;
             text-align: center;
         }
-        .summary-card h3 {
-            font-size: 13px;
-            font-weight: 400;
-            color: #64748b;
-        }
-        .summary-card .number {
-            font-size: 28px;
-            font-weight: 700;
-            color: #0f172a;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        th, td {
-            text-align: left;
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            vertical-align: middle;
-        }
-        th {
-            background: #f8fafc;
-        }
-        .badge {
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 500;
-        }
+        .summary-card h3 { font-size: 13px; font-weight: 400; color: #64748b; }
+        .summary-card .number { font-size: 28px; font-weight: 700; color: #0f172a; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        th { background: #f8fafc; }
+        .badge { padding: 4px 12px; border-radius: 30px; font-size: 12px; font-weight: 500; }
         .badge-level1 { background: #dbeafe; color: #1e40af; }
         .badge-level2 { background: #fef3c7; color: #92400e; }
         .badge-level3 { background: #d1fae5; color: #065f46; }
-
         .share-box {
             background: #f1f5f9;
             padding: 12px 16px;
@@ -196,26 +115,19 @@
             cursor: pointer;
             font-weight: 500;
         }
-        .share-box button:hover {
-            background: #e04e2e;
-        }
-
-        @media (max-width: 700px) {
-            .navbar { padding: 12px 20px; }
-            th, td { font-size: 12px; }
-        }
+        .share-box button:hover { background: #e04e2e; }
+        @media (max-width: 700px) { .navbar { padding: 12px 20px; } th, td { font-size: 12px; } }
     </style>
 </head>
 <body>
 
-<!-- Navigation -->
 <nav class="navbar">
     <h2>🍽 ChowBot Employee</h2>
     <div class="nav-links">
         <a href="index.html">🏠 Home</a>
         <a href="restaurant-dashboard.html">📊 Dashboard</a>
         <a href="menu.html">🍽 Menu</a>
-    
+        <a href="employee-register.html">📝 Join</a>
     </div>
 </nav>
 
@@ -233,6 +145,24 @@
 </div>
 
 <script>
+    // =========================
+    // DATE FORMATTER
+    // =========================
+    function formatDate(dateVal) {
+        if (!dateVal) return '-';
+        try {
+            if (dateVal._seconds !== undefined) {
+                return new Date(dateVal._seconds * 1000).toLocaleString();
+            }
+            if (typeof dateVal.toDate === 'function') {
+                return dateVal.toDate().toLocaleString();
+            }
+            const d = new Date(dateVal);
+            if (isNaN(d.getTime())) return '-';
+            return d.toLocaleString();
+        } catch (_) { return '-'; }
+    }
+
     const loginBtn = document.getElementById('loginBtn');
     const codeInput = document.getElementById('empCodeInput');
     const phoneInput = document.getElementById('empPhoneInput');
@@ -319,7 +249,7 @@
             html += `<tr><td colspan="4">No restaurants yet. Start referring!</td></tr>`;
         } else {
             restaurants.forEach(r => {
-                const date = r.createdAt ? new Date(r.createdAt.toDate()).toLocaleDateString() : '-';
+                const date = formatDate(r.createdAt);
                 html += `
                     <tr>
                         <td>${r.name}</td>
@@ -332,7 +262,6 @@
         }
         html += `</tbody></table></div></div>`;
 
-        // Downline (people they recruited)
         html += `
             <div class="card">
                 <h2>👥 Your Downline (${downline.length})</h2>
@@ -358,7 +287,6 @@
         }
         html += `</tbody></table></div></div>`;
 
-        // Commission transactions
         html += `
             <div class="card">
                 <h2>📜 Recent Commissions</h2>
@@ -371,7 +299,7 @@
             html += `<tr><td colspan="4">No transactions yet</td></tr>`;
         } else {
             transactions.forEach(tx => {
-                const date = tx.createdAt ? new Date(tx.createdAt.toDate()).toLocaleString() : '-';
+                const date = formatDate(tx.createdAt);
                 html += `
                     <tr>
                         <td>${date}</td>
@@ -407,7 +335,6 @@
             return showError('Please enter either your referral code or WhatsApp number.');
         }
         if (phone) {
-            // Normalize phone
             let clean = phone.replace(/\D/g, '');
             if (clean.startsWith('0')) clean = '234' + clean.substring(1);
             if (!clean.startsWith('234')) clean = '234' + clean;
@@ -417,7 +344,6 @@
         }
     });
 
-    // Auto-load if URL has ?code=REF123
     const urlParams = new URLSearchParams(window.location.search);
     const codeParam = urlParams.get('code');
     if (codeParam) {

@@ -4419,34 +4419,56 @@ app.post("/api/admin/data", async (req, res) => {
 // =========================
 app.post("/api/employee/data", async (req, res) => {
   try {
-    const { identifier } = req.body;
-    if (!identifier) return res.status(400).json({ error: "Missing identifier" });
+    const { phone, code } = req.body;
 
-    // Find user by referral code OR phone
-    let userQuery = await db.collection("users").where("referralCode", "==", identifier).limit(1).get();
-    if (userQuery.empty) {
-      // Try by phone
-      userQuery = await db.collection("users").where("phone", "==", identifier).limit(1).get();
+    // Validate identifier
+    if (!phone && !code) {
+      return res.status(400).json({ error: "Missing identifier. Provide phone or referral code." });
     }
-    if (userQuery.empty) {
+
+    let user = null;
+    if (phone) {
+      const snapshot = await db.collection("users").where("phone", "==", phone).limit(1).get();
+      if (!snapshot.empty) user = snapshot.docs[0].data();
+    } else if (code) {
+      const snapshot = await db.collection("users").where("referralCode", "==", code).limit(1).get();
+      if (!snapshot.empty) user = snapshot.docs[0].data();
+    }
+
+    if (!user) {
       return res.status(404).json({ error: "Employee not found" });
     }
-    const user = userQuery.docs[0].data();
 
-    // Get downline (people they recruited)
-    const downlineSnapshot = await db.collection("users").where("referredBy", "==", user.phone).get();
-    const downline = downlineSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const userPhone = user.phone;
 
-    // Get restaurants they directly referred
-    const restaurantsSnapshot = await db.collection("restaurants").where("referredBy", "==", user.phone).get();
-    const referredRestaurants = restaurantsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-    // Get commission transactions
-    const transactionsSnapshot = await db.collection("walletTransactions")
-      .where("phone", "==", user.phone)
+    // Get transactions
+    const txSnapshot = await db.collection("walletTransactions")
+      .where("phone", "==", userPhone)
       .orderBy("createdAt", "desc")
       .get();
-    const transactions = transactionsSnapshot.docs.map(doc => doc.data());
+    const transactions = txSnapshot.docs.map(doc => doc.data());
+
+    // Get restaurants directly referred by this user
+    const restSnapshot = await db.collection("restaurants")
+      .where("referredBy", "==", userPhone)
+      .get();
+    const referredRestaurants = restSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Get downline (people they directly recruited)
+    const downlineSnapshot = await db.collection("users")
+      .where("referredBy", "==", userPhone)
+      .get();
+    const downline = downlineSnapshot.docs.map(doc => ({ phone: doc.id, ...doc.data() }));
+
+    // Breakdown earnings by type
+    let directEarnings = 0; // ₦50 direct referral
+    let uplineEarnings = 0; // ₦20 or ₦30 as upline
+    transactions.forEach(tx => {
+      if (tx.description?.includes("Direct referral bonus")) directEarnings += tx.amount;
+      else if (tx.description?.includes("upline")) uplineEarnings += tx.amount;
+    });
+
+    const shareLink = `https://chowbot-kgdk.onrender.com/employee.html?code=${user.referralCode}`;
 
     res.json({
       employee: {
@@ -4459,16 +4481,17 @@ app.post("/api/employee/data", async (req, res) => {
         directReferralsCount: user.directReferralsCount || 0,
         referredBy: user.referredBy
       },
-      downline,
       referredRestaurants,
-      transactions
+      downline,
+      transactions: transactions.slice(0, 20),
+      earnings: { direct: directEarnings, upline: uplineEarnings, total: user.totalEarned || 0 },
+      shareLink
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    console.error("Employee data error:", err);
+    res.status(500).json({ error: "Server error: " + err.message });
   }
 });
-
 
 // =========================
 // 👑 ADMIN: CREATE REFERRER (EMPLOYEE)
